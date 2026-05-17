@@ -1,85 +1,98 @@
-# ── Entity 1: AMM Swap ───────────────────────────────────────────────────────
 type Swap @entity(immutable: true) {
-  id:          Bytes!
-  sender:      Bytes!       # address
-  amount0In:   BigInt!
-  amount1In:   BigInt!
-  amount0Out:  BigInt!
-  amount1Out:  BigInt!
-  to:          Bytes!
-  timestamp:   BigInt!
+  id: String!
+  sender: Bytes!
+  tokenIn: Bytes!
+  tokenOut: Bytes!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  to: Bytes!
+  timestamp: BigInt!
   blockNumber: BigInt!
-  txHash:      Bytes!
+  txHash: Bytes!
 }
 
-# ── Entity 2: Governance Proposal ────────────────────────────────────────────
-type Proposal @entity {
-  id:           Bytes!       # proposalId as hex
-  proposalId:   BigInt!
-  proposer:     Bytes!
-  description:  String!
-  status:       String!      # Pending | Active | Succeeded | Defeated | Queued | Executed | Canceled
-  forVotes:     BigInt!
+type Proposal @entity(immutable: false) {
+  id: String!
+  proposalId: BigInt!
+  proposer: Bytes!
+  description: String!
+  status: String!
+  forVotes: BigInt!
   againstVotes: BigInt!
   abstainVotes: BigInt!
-  voteStart:    BigInt!
-  voteEnd:      BigInt!
-  createdAt:    BigInt!
-  executedAt:   BigInt
-  canceledAt:   BigInt
+  voteStart: BigInt!
+  voteEnd: BigInt!
+  createdAt: BigInt!
+  executedAt: BigInt
+  canceledAt: BigInt
 }
 
-# ── Entity 3: Individual Vote ─────────────────────────────────────────────────
 type Vote @entity(immutable: true) {
-  id:         Bytes!
-  proposal:   Proposal!
-  voter:      Bytes!
-  support:    Int!           # 0=against, 1=for, 2=abstain
-  weight:     BigInt!
-  reason:     String!
-  timestamp:  BigInt!
-  txHash:     Bytes!
+  id: String!
+  proposal: Proposal!
+  voter: Bytes!
+  support: Int!
+  weight: BigInt!
+  reason: String!
+  timestamp: BigInt!
+  txHash: Bytes!
 }
 
-# ── Entity 4: Token Holder ────────────────────────────────────────────────────
-type TokenHolder @entity {
-  id:          Bytes!         # holder address
-  address:     Bytes!
-  balance:     BigInt!
+type TokenHolder @entity(immutable: false) {
+  id: String!
+  address: Bytes!
+  balance: BigInt!
   votingPower: BigInt!
-  delegate:    Bytes!
+  delegate: Bytes
 }
 
-# ── Entity 5: Loot Drop (VRF) ─────────────────────────────────────────────────
-type LootDrop @entity {
-  id:          Bytes!
-  requester:   Bytes!
-  requestId:   BigInt!
-  randomWords: [BigInt!]!
-  itemsGranted:[BigInt!]!     # ERC-1155 token IDs
-  fulfilled:   Boolean!
+type LootDrop @entity(immutable: false) {
+  id: String!
+  requester: Bytes!
+  requestId: BigInt!
+  itemGranted: BigInt
+  randomness: BigInt
+  feePaid: BigInt!
+  fulfilled: Boolean!
   requestedAt: BigInt!
   fulfilledAt: BigInt
-  txHash:      Bytes!
+  txHash: Bytes!
 }
 
-# ── Entity 6: Crafting Event ──────────────────────────────────────────────────
 type CraftingEvent @entity(immutable: true) {
-  id:           Bytes!
-  crafter:      Bytes!
-  inputItems:   [BigInt!]!    # token IDs consumed
-  inputAmounts: [BigInt!]!
-  outputItem:   BigInt!
+  id: String!
+  user: Bytes!
+  recipeId: BigInt!
+  amount: BigInt!
+  outputItemId: BigInt!
   outputAmount: BigInt!
-  timestamp:    BigInt!
-  txHash:       Bytes!
+  timestamp: BigInt!
+  txHash: Bytes!
 }
 
-# ── Entity 7: Vault Snapshot (daily) ─────────────────────────────────────────
-type VaultDayData @entity {
-  id:            String!      # "YYYY-MM-DD"
-  date:          Int!
-  totalAssets:   BigInt!
-  totalSupply:   BigInt!
+type VaultDayData @entity(immutable: false) {
+  id: String!
+  date: Int!
+  totalAssets: BigInt!
+  totalSupply: BigInt!
   pricePerShare: BigDecimal!
+  lastUpdatedAt: BigInt!
+}
+
+type RentalActivity @entity(immutable: true) {
+  id: String!
+  eventType: String!
+  listingId: BigInt!
+  rentalId: BigInt
+  lender: Bytes
+  renter: Bytes
+  itemId: BigInt
+  amount: BigInt
+  pricePerDay: BigInt
+  duration: BigInt
+  totalPayment: BigInt
+  protocolFee: BigInt
+  status: String!
+  timestamp: BigInt!
+  txHash: Bytes!
 }

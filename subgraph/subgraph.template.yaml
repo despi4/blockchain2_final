@@ -7,9 +7,9 @@ dataSources:
     name: ResourceAMM
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{RESOURCE_AMM_ADDRESS}}"
       abi: ResourceAMM
-      startBlock: 0
+      startBlock: {{RESOURCE_AMM_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -28,9 +28,9 @@ dataSources:
     name: GameFiGovernor
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{GAMEFI_GOVERNOR_ADDRESS}}"
       abi: GameFiGovernor
-      startBlock: 0
+      startBlock: {{GAMEFI_GOVERNOR_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -58,9 +58,9 @@ dataSources:
     name: GameGovernanceToken
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{GAME_GOVERNANCE_TOKEN_ADDRESS}}"
       abi: GameGovernanceToken
-      startBlock: 0
+      startBlock: {{GAME_GOVERNANCE_TOKEN_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -83,9 +83,9 @@ dataSources:
     name: LootDrop
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{LOOT_DROP_ADDRESS}}"
       abi: LootDrop
-      startBlock: 0
+      startBlock: {{LOOT_DROP_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -106,9 +106,9 @@ dataSources:
     name: CraftingSystem
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{CRAFTING_SYSTEM_ADDRESS}}"
       abi: CraftingSystem
-      startBlock: 0
+      startBlock: {{CRAFTING_SYSTEM_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -127,9 +127,9 @@ dataSources:
     name: GuildTreasuryVault
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{GUILD_TREASURY_VAULT_ADDRESS}}"
       abi: GuildTreasuryVaultV1
-      startBlock: 0
+      startBlock: {{GUILD_TREASURY_VAULT_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -150,9 +150,9 @@ dataSources:
     name: ItemRentalVault
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "{{ITEM_RENTAL_VAULT_ADDRESS}}"
       abi: ItemRentalVault
-      startBlock: 0
+      startBlock: {{ITEM_RENTAL_VAULT_START_BLOCK}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

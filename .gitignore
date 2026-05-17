@@ -18,6 +18,8 @@ build/
 .vite/
 frontend/node_modules/
 frontend/dist/
+subgraph/build/
+subgraph/generated/
 
 # Logs
 *.log

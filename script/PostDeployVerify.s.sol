@@ -15,7 +15,7 @@ import "../src/governance/GameFiTimelock.sol";
 ///
 /// Usage:
 ///   forge script script/PostDeployVerify.s.sol:PostDeployVerify \
-///     --rpc-url $BASE_SEPOLIA_RPC_URL -vvv
+///     --rpc-url $ARBITRUM_SEPOLIA_RPC_URL -vvv
 contract PostDeployVerify is Script {
     function run() external view {
         address governorAddr = vm.envAddress("GOVERNOR_ADDRESS");

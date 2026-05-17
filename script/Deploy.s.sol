@@ -12,10 +12,10 @@ import "../src/governance/GameFiTimelock.sol";
 ///
 /// Usage:
 ///   forge script script/Deploy.s.sol:Deploy \
-///     --rpc-url $BASE_SEPOLIA_RPC_URL       \
+///     --rpc-url $ARBITRUM_SEPOLIA_RPC_URL   \
 ///     --broadcast                            \
 ///     --verify                               \
-///     --etherscan-api-key $BASESCAN_API_KEY  \
+///     --etherscan-api-key $ARBISCAN_API_KEY  \
 ///     -vvvv
 contract Deploy is Script {
     // ── Addresses of contracts deployed by Person 1 ────────────────────────
@@ -53,14 +53,14 @@ contract Deploy is Script {
 
         // ── 4. Print deployment summary ───────────────────────────────────────
         console.log("\n=== DEPLOYMENT SUMMARY ===");
-        console.log("Network:        Base Sepolia (chainId %d)", block.chainid);
+        console.log("Network:        Arbitrum Sepolia (chainId %d)", block.chainid);
         console.log("Governor:       %s", address(governor));
         console.log("Timelock:       %s", address(timelock));
         console.log("GovToken (ext): %s", govToken);
         console.log("AMM (ext):      %s", ammAddr);
         console.log("Vault (ext):    %s", vaultAddr);
         console.log("Loot (ext):     %s", lootAddr);
-        console.log("\nUpdate frontend/src/config/contracts.js with these addresses!");
-        console.log("Update subgraph/subgraph.yaml with these addresses!");
+        console.log("\nUpdate frontend/.env.local with VITE_* addresses.");
+        console.log("Update subgraph/subgraph.yaml placeholder addresses and start blocks.");
     }
 }

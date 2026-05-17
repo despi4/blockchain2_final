@@ -1,11 +1,15 @@
-import { Link, useLocation } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { Link, useLocation } from "react-router-dom";
 
 const links = [
-  { to: "/", label: "Dashboard" },
-  { to: "/items", label: "Items" },
-  { to: "/marketplace", label: "Marketplace" },
-  { to: "/governance", label: "Governance" },
+  { to: "/balance", label: "Balance" },
+  { to: "/crafting", label: "Crafting" },
+  { to: "/loot", label: "Loot" },
+  { to: "/marketplace", label: "AMM" },
+  { to: "/vault", label: "Vault" },
+  { to: "/rental", label: "Rental" },
+  { to: "/governance", label: "DAO" },
+  { to: "/subgraph", label: "Subgraph" },
 ];
 
 export default function Navbar() {
@@ -16,42 +20,56 @@ export default function Navbar() {
       style={{
         background: "var(--bg2)",
         borderBottom: "1px solid var(--border)",
-        padding: "0 1.5rem",
+        padding: "0.75rem 1.25rem",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        height: "60px",
+        gap: "1rem",
+        flexWrap: "wrap",
         position: "sticky",
         top: 0,
         zIndex: 100,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <span style={{ fontSize: "1.4rem" }}>⚔️</span>
+      <Link
+        to="/balance"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          textDecoration: "none",
+          color: "var(--text)",
+        }}
+      >
+        <span style={{ fontSize: "1.1rem", fontWeight: 900 }}>GF</span>
         <span style={{ fontWeight: 800, fontSize: "1rem", letterSpacing: "-0.01em" }}>
           GameFi Economy
         </span>
-      </div>
+      </Link>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-        {links.map(({ to, label }) => (
-          <Link
-            key={to}
-            to={to}
-            style={{
-              padding: "0.4rem 0.85rem",
-              borderRadius: "8px",
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              color: pathname === to ? "var(--accent2)" : "var(--text2)",
-              background: pathname === to ? "rgba(124,58,237,0.15)" : "transparent",
-              textDecoration: "none",
-              transition: "background 0.15s, color 0.15s",
-            }}
-          >
-            {label}
-          </Link>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
+        {links.map(({ to, label }) => {
+          const active = pathname === to || (to === "/balance" && pathname === "/");
+
+          return (
+            <Link
+              key={to}
+              to={to}
+              style={{
+                padding: "0.45rem 0.8rem",
+                borderRadius: "8px",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: active ? "var(--accent2)" : "var(--text2)",
+                background: active ? "rgba(124,58,237,0.15)" : "transparent",
+                textDecoration: "none",
+                transition: "background 0.15s, color 0.15s",
+              }}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
 
       <ConnectButton accountStatus="avatar" chainStatus="icon" showBalance={false} />

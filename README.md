@@ -3,6 +3,15 @@
 This repository contains the full capstone implementation for a GameFi economy protocol.
 It combines the core Solidity protocol, governance, frontend, deployment scripts, and subgraph work in one repo.
 
+## Canonical testnet
+
+The repo is now aligned around `Arbitrum Sepolia` as the default L2 target:
+
+- frontend wallet config targets `Arbitrum Sepolia`
+- subgraph sources target `arbitrum-sepolia`
+- `.env.example` uses `ARBITRUM_SEPOLIA_RPC_URL` and `ARBISCAN_API_KEY`
+- deployment placeholders live in [deployments/arbitrum-sepolia.example.json](deployments/arbitrum-sepolia.example.json)
+
 ## Main modules
 
 - `src/token/` - governance token, resource tokens, ERC1155 game items
@@ -56,4 +65,44 @@ forge coverage --report summary
 cd frontend
 npm install
 npm run dev
+```
+
+Frontend addresses are read from `frontend/.env.local`. Start from [frontend/.env.example](frontend/.env.example) and fill in the deployed addresses.
+
+## Subgraph wiring
+
+The subgraph now indexes the canonical contracts and real event signatures for:
+
+- `ResourceAMM`
+- `GameFiGovernor`
+- `GameGovernanceToken`
+- `LootDrop`
+- `CraftingSystem`
+- `GuildTreasuryVaultV1`
+- `ItemRentalVault`
+
+Before deploying the subgraph:
+
+1. Copy real addresses and `startBlock` values into `deployments/arbitrum-sepolia.json` or patch [subgraph/subgraph.yaml](subgraph/subgraph.yaml) directly
+2. Keep the ABI files in `subgraph/abis/` in sync with `forge build`
+3. Set `VITE_SUBGRAPH_URL` in the frontend after the Graph deployment is live
+
+To avoid editing the frontend and subgraph by hand every time, copy [deployments/arbitrum-sepolia.example.json](deployments/arbitrum-sepolia.example.json) to `deployments/arbitrum-sepolia.json`, fill in the deployed addresses, and run:
+
+```bash
+node script/syncDeploymentConfig.mjs
+```
+
+That command writes:
+
+- `frontend/.env.local`
+- `subgraph/subgraph.yaml`
+
+Local subgraph build:
+
+```bash
+cd subgraph
+npm install
+npm run codegen
+npm run build
 ```
