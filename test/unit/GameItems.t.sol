@@ -139,6 +139,16 @@ contract GameItemsTest is Test {
         items.setTokenURI(legendaryItemId, "legendary-item.json");
     }
 
+    function testBaseURICanBeUpdatedByRole() external {
+        vm.prank(uriSetter);
+        items.setTokenURI(woodId, "wood.json");
+
+        vm.prank(uriSetter);
+        items.setBaseURI("ipfs://updated-items/");
+
+        assertEq(items.uri(woodId), "ipfs://updated-items/wood.json");
+    }
+
     function testSupportsInterfaceWorksForERC1155AndAccessControl() external view {
         assertTrue(items.supportsInterface(type(IERC1155).interfaceId));
         assertTrue(items.supportsInterface(type(IAccessControl).interfaceId));

@@ -65,6 +65,22 @@ contract PriceOracleTest is Test {
         assertEq(price18, 2_500e18);
     }
 
+    function testDecimalsConversionHandles18DecimalsFeed() external {
+        MockV3Aggregator exactFeed = new MockV3Aggregator(18, 3_000e18);
+        PriceOracle exactOracle = new PriceOracle(admin, exactFeed, 1 days);
+
+        (uint256 price18,) = exactOracle.getLatestPrice18Decimals();
+        assertEq(price18, 3_000e18);
+    }
+
+    function testDecimalsConversionHandlesGreaterThan18Decimals() external {
+        MockV3Aggregator highPrecisionFeed = new MockV3Aggregator(20, 4_200e20);
+        PriceOracle highPrecisionOracle = new PriceOracle(admin, highPrecisionFeed, 1 days);
+
+        (uint256 price18,) = highPrecisionOracle.getLatestPrice18Decimals();
+        assertEq(price18, 4_200e18);
+    }
+
     function testAdminCanChangeFeedAddress() external {
         MockV3Aggregator newFeed = new MockV3Aggregator(8, 1_750e8);
 

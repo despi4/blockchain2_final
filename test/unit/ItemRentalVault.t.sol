@@ -276,4 +276,15 @@ contract ItemRentalVaultTest is Test {
         assertEq(uint8(endedStatus), uint8(ItemRentalVault.ListingStatus.RETURNED));
         assertEq(clearedRentalId, 0);
     }
+
+    function testOwnerCanUpdateFeeAndTreasury() external {
+        vm.prank(admin);
+        vault.setProtocolFeeBps(750);
+        assertEq(vault.protocolFeeBps(), 750);
+
+        address newTreasury = makeAddr("newTreasury");
+        vm.prank(admin);
+        vault.setTreasury(newTreasury);
+        assertEq(vault.treasury(), newTreasury);
+    }
 }

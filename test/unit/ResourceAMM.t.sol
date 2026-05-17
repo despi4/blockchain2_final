@@ -163,4 +163,9 @@ contract ResourceAMMTest is Test {
 
         assertEq(lpToken.balanceOf(bob), bobLiquidity / 2);
     }
+
+    function testConstructorRejectsInvalidTokenPair() external {
+        vm.expectRevert(ResourceAMM.InvalidToken.selector);
+        new ResourceAMM(gold, gold);
+    }
 }
