@@ -16,9 +16,3 @@ invariant = { runs = 256, depth = 15 }
 [profile.ci]
 fuzz = { runs = 5000 }
 invariant = { runs = 1000, depth = 30 }
-
-[rpc_endpoints]
-arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
-
-[etherscan]
-arbitrum_sepolia = { key = "${ARBISCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api" }
