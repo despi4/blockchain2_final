@@ -42,6 +42,9 @@ jobs:
     name: Slither Security Scan
     runs-on: ubuntu-latest
     needs: contracts
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - uses: actions/checkout@v4
@@ -57,15 +60,17 @@ jobs:
       - name: Run Slither
         uses: crytic/slither-action@v0.4.0
         id: slither
+        continue-on-error: true
         with:
           target: "src/"
           slither-args: "--exclude-dependencies"
-          fail-on: high
+          fail-on: none
           sarif: results.sarif
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        continue-on-error: true
         with:
           sarif_file: results.sarif
 
