@@ -202,8 +202,6 @@ export default function Governance({ toast }) {
     setManualId("");
   };
 
-  // Merge subgraph IDs + manual IDs, deduplicated
-  const subIds = subProposals?.map((p) => p.proposalId) ?? [];
   return (
     <div className="page">
       <h1 className="page-title">Governance</h1>
