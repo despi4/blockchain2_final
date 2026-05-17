@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
-import { ADDRESSES, AMM_ABI, VAULT_ABI, GOVERNANCE_TOKEN_ABI } from "../config/contracts";
+import { ADDRESSES, AMM_ABI, VAULT_ABI } from "../config/contracts";
 import { parseContractError } from "../hooks/useToast";
 
 function fmt(val, decimals = 18, dp = 4) {

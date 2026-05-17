@@ -83,7 +83,6 @@ function ProposalRow({ proposalId, address, toast }) {
   }, [voteError]);
 
   const isActive = state === 1;
-  const canVote = isActive && !hasVoted && !!address;
 
   const totalVotes = votes ? Number(formatUnits(votes[0] + votes[1] + votes[2], 18)) : 0;
   const forPct =
@@ -205,8 +204,6 @@ export default function Governance({ toast }) {
 
   // Merge subgraph IDs + manual IDs, deduplicated
   const subIds = subProposals?.map((p) => p.proposalId) ?? [];
-  const allIds = [...new Set([...manualList, ...subIds])];
-
   return (
     <div className="page">
       <h1 className="page-title">Governance</h1>

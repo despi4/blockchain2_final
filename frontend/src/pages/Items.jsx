@@ -51,8 +51,6 @@ export default function Items({ toast }) {
   const { address, isConnected } = useAccount();
 
   const [selectedCraft, setSelectedCraft] = useState(null); // outputId to craft
-  const [lootFee, setLootFee] = useState(null);
-  const [pendingLoot, setPendingLoot] = useState(null);
 
   // ── Batch read all item balances ──────────────────────────────────────────
   const balanceCalls = ITEM_IDS_LIST.map((id) => ({
@@ -173,7 +171,6 @@ export default function Items({ toast }) {
   };
 
   const craftableItems = ITEM_IDS_LIST.filter((id) => ITEM_IDS[id].recipe);
-  const resourceItems = ITEM_IDS_LIST.filter((id) => ITEM_IDS[id].type === "resource");
 
   return (
     <div className="page">
