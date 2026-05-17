@@ -38,10 +38,7 @@ contract PostDeployVerify is Script {
 
         // ── Check 2: No admin backdoor ────────────────────────────────────────
         // Check that the deployer (tx.origin) does not hold admin role
-        bool timelockSelfIsAdmin = timelock.hasRole(
-            timelock.DEFAULT_ADMIN_ROLE(),
-            address(timelock)
-        );
+        bool timelockSelfIsAdmin = timelock.hasRole(timelock.DEFAULT_ADMIN_ROLE(), address(timelock));
         if (timelockSelfIsAdmin) {
             console.log("[PASS] Timelock is self-governed (no external admin)");
         } else {
@@ -59,7 +56,7 @@ contract PostDeployVerify is Script {
         }
 
         // ── Check 4: Governor parameters ─────────────────────────────────────
-        uint256 delay_g  = governor.votingDelay();
+        uint256 delay_g = governor.votingDelay();
         uint256 period_g = governor.votingPeriod();
         uint256 quorum_g = governor.quorumNumerator();
 
@@ -85,9 +82,12 @@ contract PostDeployVerify is Script {
         }
 
         console.log("=== Addresses ===");
-        console.log("Governor:  "); console.logAddress(governorAddr);
-        console.log("Timelock:  "); console.logAddress(timelockAddr);
-        console.log("GovToken:  "); console.logAddress(govTokenAddr);
+        console.log("Governor:  ");
+        console.logAddress(governorAddr);
+        console.log("Timelock:  ");
+        console.logAddress(timelockAddr);
+        console.log("GovToken:  ");
+        console.logAddress(govTokenAddr);
 
         if (allGood) {
             console.log("=== ALL CHECKS PASSED -safe to use ===");

@@ -14,9 +14,11 @@ contract MockGovToken is ERC20, ERC20Permit, ERC20Votes {
     constructor() ERC20("GameFi Token", "GFI") ERC20Permit("GameFi Token") {
         _mint(msg.sender, 1_000_000e18);
     }
-    function _update(address from, address to, uint256 value)
-        internal override(ERC20, ERC20Votes)
-    { super._update(from, to, value); }
+
+    function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Votes) {
+        super._update(from, to, value);
+    }
+
     function nonces(address owner) public view override(ERC20Permit, Nonces) returns (uint256) {
         return super.nonces(owner);
     }
@@ -28,29 +30,36 @@ contract GameParams {
     uint256 public craftingCost = 50;
     address public timelockAddr;
 
-    constructor(address _timelock) { timelockAddr = _timelock; }
+    constructor(address _timelock) {
+        timelockAddr = _timelock;
+    }
 
     modifier onlyTimelock() {
         require(msg.sender == timelockAddr, "only timelock");
         _;
     }
 
-    function setDropRate(uint256 rate) external onlyTimelock { dropRate = rate; }
-    function setCraftingCost(uint256 cost) external onlyTimelock { craftingCost = cost; }
+    function setDropRate(uint256 rate) external onlyTimelock {
+        dropRate = rate;
+    }
+
+    function setCraftingCost(uint256 cost) external onlyTimelock {
+        craftingCost = cost;
+    }
 }
 
 contract GovernorTest is Test {
-    MockGovToken   token;
+    MockGovToken token;
     GameFiTimelock timelock;
     GameFiGovernor governor;
-    GameParams     params;
+    GameParams params;
 
     address proposer = makeAddr("proposer");
-    address voter1   = makeAddr("voter1");
-    address voter2   = makeAddr("voter2");
+    address voter1 = makeAddr("voter1");
+    address voter2 = makeAddr("voter2");
 
     // Block counts matching governor settings
-    uint256 constant VOTING_DELAY  = 7_200;
+    uint256 constant VOTING_DELAY = 7_200;
     uint256 constant VOTING_PERIOD = 50_400;
 
     function setUp() public {
@@ -58,13 +67,16 @@ contract GovernorTest is Test {
 
         token = new MockGovToken();
         token.transfer(proposer, 10_000e18);
-        token.transfer(voter1,   400_000e18);
-        token.transfer(voter2,   300_000e18);
+        token.transfer(voter1, 400_000e18);
+        token.transfer(voter2, 300_000e18);
 
         // Delegate to activate voting power (must happen before roll)
-        vm.prank(proposer); token.delegate(proposer);
-        vm.prank(voter1);   token.delegate(voter1);
-        vm.prank(voter2);   token.delegate(voter2);
+        vm.prank(proposer);
+        token.delegate(proposer);
+        vm.prank(voter1);
+        token.delegate(voter1);
+        vm.prank(voter2);
+        token.delegate(voter2);
 
         // Deploy timelock with temporary proposer, then swap
         timelock = new GameFiTimelock(address(1));
@@ -130,12 +142,12 @@ contract GovernorTest is Test {
     // ── Full lifecycle: propose → vote → queue → execute ─────────────────────
 
     function test_full_governance_lifecycle() public {
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
-        targets[0]   = address(params);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(params);
         calldatas[0] = abi.encodeCall(GameParams.setDropRate, (200));
-        string memory description  = "Proposal #1: Double the drop rate";
+        string memory description = "Proposal #1: Double the drop rate";
 
         // Propose
         vm.prank(proposer);
@@ -147,8 +159,10 @@ contract GovernorTest is Test {
         assertEq(uint8(governor.state(pid)), 1); // Active
 
         // Both voters cast For
-        vm.prank(voter1); governor.castVote(pid, 1);
-        vm.prank(voter2); governor.castVote(pid, 1);
+        vm.prank(voter1);
+        governor.castVote(pid, 1);
+        vm.prank(voter2);
+        governor.castVote(pid, 1);
 
         // Advance past voting period
         vm.roll(block.number + VOTING_PERIOD + 1);
@@ -169,10 +183,10 @@ contract GovernorTest is Test {
     }
 
     function test_proposal_defeated_when_quorum_not_met() public {
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
-        targets[0]   = address(params);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(params);
         calldatas[0] = abi.encodeCall(GameParams.setDropRate, (50));
 
         vm.prank(proposer);
@@ -181,17 +195,18 @@ contract GovernorTest is Test {
         vm.roll(block.number + VOTING_DELAY + 1);
 
         // Proposer votes: 10_000e18 / 1_000_000e18 = 1%, below 4% quorum
-        vm.prank(proposer); governor.castVote(pid, 1);
+        vm.prank(proposer);
+        governor.castVote(pid, 1);
 
         vm.roll(block.number + VOTING_PERIOD + 1);
         assertEq(uint8(governor.state(pid)), 3); // Defeated (quorum not met)
     }
 
     function test_cannot_vote_twice() public {
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
-        targets[0]   = address(params);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(params);
         calldatas[0] = abi.encodeCall(GameParams.setDropRate, (150));
 
         vm.prank(proposer);
@@ -199,7 +214,8 @@ contract GovernorTest is Test {
 
         vm.roll(block.number + VOTING_DELAY + 1);
 
-        vm.prank(voter1); governor.castVote(pid, 1);
+        vm.prank(voter1);
+        governor.castVote(pid, 1);
 
         vm.prank(voter1);
         vm.expectRevert();
@@ -209,12 +225,13 @@ contract GovernorTest is Test {
     function test_cannot_propose_below_threshold() public {
         address lowStake = makeAddr("lowStake");
         token.transfer(lowStake, 5_000e18); // 0.5% — below 1% threshold
-        vm.prank(lowStake); token.delegate(lowStake);
+        vm.prank(lowStake);
+        token.delegate(lowStake);
         vm.roll(block.number + 1);
 
         address[] memory t = new address[](1);
         uint256[] memory v = new uint256[](1);
-        bytes[]   memory c = new bytes[](1);
+        bytes[] memory c = new bytes[](1);
         t[0] = address(params);
         c[0] = abi.encodeCall(GameParams.setDropRate, (999));
 
@@ -224,10 +241,10 @@ contract GovernorTest is Test {
     }
 
     function test_against_votes_defeat_proposal() public {
-        address[] memory targets   = new address[](1);
-        uint256[] memory values    = new uint256[](1);
-        bytes[]   memory calldatas = new bytes[](1);
-        targets[0]   = address(params);
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
+        targets[0] = address(params);
         calldatas[0] = abi.encodeCall(GameParams.setCraftingCost, (999));
 
         vm.prank(proposer);
@@ -235,9 +252,12 @@ contract GovernorTest is Test {
 
         vm.roll(block.number + VOTING_DELAY + 1);
 
-        vm.prank(voter1); governor.castVote(pid, 0); // Against
-        vm.prank(voter2); governor.castVote(pid, 0); // Against
-        vm.prank(proposer); governor.castVote(pid, 1); // For (minority)
+        vm.prank(voter1); // Against
+        governor.castVote(pid, 0);
+        vm.prank(voter2); // Against
+        governor.castVote(pid, 0);
+        vm.prank(proposer); // For (minority)
+        governor.castVote(pid, 1);
 
         vm.roll(block.number + VOTING_PERIOD + 1);
         assertEq(uint8(governor.state(pid)), 3); // Defeated
@@ -252,7 +272,8 @@ contract GovernorTest is Test {
 
         uint256 amt = bound(uint256(amount), 1e18, 50_000e18);
         token.transfer(user, amt);
-        vm.prank(user); token.delegate(user);
+        vm.prank(user);
+        token.delegate(user);
         vm.roll(block.number + 1);
 
         assertEq(governor.getVotes(user, block.number - 1), amt);

@@ -20,14 +20,14 @@ import "../src/governance/GameFiTimelock.sol";
 contract Deploy is Script {
     // ── Addresses of contracts deployed by Person 1 ────────────────────────
     // Set these via env or hardcode after Person 1's deployment
-    address govToken  = vm.envOr("GOV_TOKEN_ADDRESS",  address(0));
-    address ammAddr   = vm.envOr("AMM_ADDRESS",          address(0));
-    address vaultAddr = vm.envOr("VAULT_ADDRESS",        address(0));
-    address lootAddr  = vm.envOr("LOOT_ADDRESS",         address(0));
+    address govToken = vm.envOr("GOV_TOKEN_ADDRESS", address(0));
+    address ammAddr = vm.envOr("AMM_ADDRESS", address(0));
+    address vaultAddr = vm.envOr("VAULT_ADDRESS", address(0));
+    address lootAddr = vm.envOr("LOOT_ADDRESS", address(0));
 
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
-        address deployer    = vm.addr(deployerKey);
+        address deployer = vm.addr(deployerKey);
 
         console.log("Deployer:", deployer);
         console.log("Chain ID:", block.chainid);
@@ -40,16 +40,13 @@ contract Deploy is Script {
 
         // ── 2. Deploy Governor pointing at Timelock ──────────────────────────
         require(govToken != address(0), "Set GOV_TOKEN_ADDRESS env var");
-        GameFiGovernor governor = new GameFiGovernor(
-            IVotes(govToken),
-            timelock
-        );
+        GameFiGovernor governor = new GameFiGovernor(IVotes(govToken), timelock);
         console.log("Governor deployed:", address(governor));
 
         // ── 3. Wire Timelock: grant PROPOSER to Governor, revoke deployer ─────
-        timelock.grantRole(timelock.PROPOSER_ROLE(),   address(governor));
-        timelock.grantRole(timelock.EXECUTOR_ROLE(),   address(0));       // anyone executes
-        timelock.revokeRole(timelock.PROPOSER_ROLE(),  deployer);
+        timelock.grantRole(timelock.PROPOSER_ROLE(), address(governor));
+        timelock.grantRole(timelock.EXECUTOR_ROLE(), address(0)); // anyone executes
+        timelock.revokeRole(timelock.PROPOSER_ROLE(), deployer);
         timelock.revokeRole(timelock.DEFAULT_ADMIN_ROLE(), deployer);
 
         vm.stopBroadcast();

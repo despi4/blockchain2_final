@@ -31,9 +31,9 @@ contract GameFiGovernor is
     constructor(IVotes _token, TimelockController _timelock)
         Governor("GameFiGovernor")
         GovernorSettings(
-            7_200,       // votingDelay:  7 200 blocks ≈ 1 day
-            50_400,      // votingPeriod: 50 400 blocks ≈ 1 week
-            10_000e18    // proposalThreshold: 1% of 1 000 000 GFI supply
+            7_200, // votingDelay:  7 200 blocks ≈ 1 day
+            50_400, // votingPeriod: 50 400 blocks ≈ 1 week
+            10_000e18 // proposalThreshold: 1% of 1 000 000 GFI supply
         )
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4) // 4% quorum
@@ -42,39 +42,32 @@ contract GameFiGovernor is
 
     // ── Overrides required by Solidity (multiple inheritance resolution) ───────
 
-    function votingDelay()
-        public view override(Governor, GovernorSettings) returns (uint256)
-    {
+    function votingDelay() public view override(Governor, GovernorSettings) returns (uint256) {
         return super.votingDelay();
     }
 
-    function votingPeriod()
-        public view override(Governor, GovernorSettings) returns (uint256)
-    {
+    function votingPeriod() public view override(Governor, GovernorSettings) returns (uint256) {
         return super.votingPeriod();
     }
 
-    function quorum(uint256 blockNumber)
-        public view override(Governor, GovernorVotesQuorumFraction) returns (uint256)
-    {
+    function quorum(uint256 blockNumber) public view override(Governor, GovernorVotesQuorumFraction) returns (uint256) {
         return super.quorum(blockNumber);
     }
 
-    function state(uint256 proposalId)
-        public view override(Governor, GovernorTimelockControl) returns (ProposalState)
-    {
+    function state(uint256 proposalId) public view override(Governor, GovernorTimelockControl) returns (ProposalState) {
         return super.state(proposalId);
     }
 
     function proposalNeedsQueuing(uint256 proposalId)
-        public view override(Governor, GovernorTimelockControl) returns (bool)
+        public
+        view
+        override(Governor, GovernorTimelockControl)
+        returns (bool)
     {
         return super.proposalNeedsQueuing(proposalId);
     }
 
-    function proposalThreshold()
-        public view override(Governor, GovernorSettings) returns (uint256)
-    {
+    function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
         return super.proposalThreshold();
     }
 
@@ -107,9 +100,7 @@ contract GameFiGovernor is
         return super._cancel(targets, values, calldatas, descriptionHash);
     }
 
-    function _executor()
-        internal view override(Governor, GovernorTimelockControl) returns (address)
-    {
+    function _executor() internal view override(Governor, GovernorTimelockControl) returns (address) {
         return super._executor();
     }
 }
