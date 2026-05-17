@@ -240,13 +240,17 @@ contract SupportContractsTest is Test {
         assertEq(resource.balanceOf(user), 15 ether);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, stranger, resource.MINTER_ROLE())
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, stranger, resource.MINTER_ROLE()
+            )
         );
         vm.prank(stranger);
         resource.mint(user, 1 ether);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, stranger, resource.BURNER_ROLE())
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, stranger, resource.BURNER_ROLE()
+            )
         );
         vm.prank(stranger);
         resource.burnFrom(user, 1 ether);

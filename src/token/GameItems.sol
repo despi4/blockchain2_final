@@ -104,7 +104,10 @@ contract GameItems is ERC1155, ERC1155Supply, ERC1155URIStorage, AccessControl {
     /// @param from Address whose balances are reduced.
     /// @param ids Item ids to burn.
     /// @param amounts Amounts to burn for each id.
-    function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external onlyRole(BURNER_ROLE) {
+    function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts)
+        external
+        onlyRole(BURNER_ROLE)
+    {
         _burnBatch(from, ids, amounts);
         emit GameItemsBatchBurned(msg.sender, from, ids, amounts);
     }

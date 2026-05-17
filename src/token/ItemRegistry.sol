@@ -9,7 +9,9 @@ contract ItemRegistry is AccessControl {
 
     mapping(uint256 itemId => DataTypes.ItemConfig config) private _itemConfigs;
 
-    event ItemConfigured(uint256 indexed itemId, DataTypes.ItemCategory category, bool craftable, bool lootable, bool rentable);
+    event ItemConfigured(
+        uint256 indexed itemId, DataTypes.ItemCategory category, bool craftable, bool lootable, bool rentable
+    );
 
     constructor(address admin) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);

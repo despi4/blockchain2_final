@@ -30,19 +30,11 @@ contract ResourceAMM is ReentrancyGuard {
     error InsufficientOutputAmount();
 
     event LiquidityAdded(
-        address indexed provider,
-        address indexed to,
-        uint256 amount0,
-        uint256 amount1,
-        uint256 liquidityMinted
+        address indexed provider, address indexed to, uint256 amount0, uint256 amount1, uint256 liquidityMinted
     );
 
     event LiquidityRemoved(
-        address indexed provider,
-        address indexed to,
-        uint256 amount0,
-        uint256 amount1,
-        uint256 liquidityBurned
+        address indexed provider, address indexed to, uint256 amount0, uint256 amount1, uint256 liquidityBurned
     );
 
     event Swap(
@@ -63,7 +55,9 @@ contract ResourceAMM is ReentrancyGuard {
         token1 = token1_;
         lpToken = new ResourceLPToken(
             address(this),
-            string.concat("LP-", IERC20Metadata(address(token0_)).symbol(), "-", IERC20Metadata(address(token1_)).symbol()),
+            string.concat(
+                "LP-", IERC20Metadata(address(token0_)).symbol(), "-", IERC20Metadata(address(token1_)).symbol()
+            ),
             string.concat("LP", IERC20Metadata(address(token0_)).symbol(), IERC20Metadata(address(token1_)).symbol())
         );
     }
@@ -74,7 +68,11 @@ contract ResourceAMM is ReentrancyGuard {
     }
 
     /// @notice Adds liquidity and mints LP shares.
-    function addLiquidity(uint256 amount0, uint256 amount1, address to) external nonReentrant returns (uint256 liquidity) {
+    function addLiquidity(uint256 amount0, uint256 amount1, address to)
+        external
+        nonReentrant
+        returns (uint256 liquidity)
+    {
         if (amount0 == 0 || amount1 == 0) revert ZeroAmount();
 
         uint112 reserve0 = _reserve0;
@@ -126,7 +124,11 @@ contract ResourceAMM is ReentrancyGuard {
     }
 
     /// @notice Quotes output amount after a 0.3% fee.
-    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 amountOut) {
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
+        public
+        pure
+        returns (uint256 amountOut)
+    {
         if (amountIn == 0) revert ZeroAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
 

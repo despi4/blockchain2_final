@@ -124,8 +124,14 @@ contract ItemRentalVaultTest is Test {
         uint256 listingId = _listDefault();
         uint256 rentalId = _rentDefault(listingId, 3);
 
-        (uint256 storedListingId, address storedRenter,, uint64 endTime, uint256 totalPayment, uint256 protocolFee, ItemRentalVault.RentalStatus status) =
-            vault.rentals(rentalId);
+        (
+            uint256 storedListingId,
+            address storedRenter,,
+            uint64 endTime,
+            uint256 totalPayment,
+            uint256 protocolFee,
+            ItemRentalVault.RentalStatus status
+        ) = vault.rentals(rentalId);
 
         assertEq(storedListingId, listingId);
         assertEq(storedRenter, renter);

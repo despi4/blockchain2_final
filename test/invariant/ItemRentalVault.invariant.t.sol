@@ -49,7 +49,9 @@ contract ItemRentalVaultHandler {
         }
     }
 
-    function listItem(uint256 actorSeed, uint256 itemSeed, uint256 amount, uint256 pricePerDay, uint64 maxDuration) external {
+    function listItem(uint256 actorSeed, uint256 itemSeed, uint256 amount, uint256 pricePerDay, uint64 maxDuration)
+        external
+    {
         address actor = actors[actorSeed % actors.length];
         uint256 itemId = itemIds[itemSeed % itemIds.length];
         uint256 balance = items.balanceOf(actor, itemId);
@@ -88,7 +90,7 @@ contract ItemRentalVaultHandler {
         if (nextRentalId == 0) return;
 
         uint256 rentalId = bound(rentalSeed, 1, nextRentalId);
-        (, , , uint64 endTime, , , ItemRentalVault.RentalStatus status) = vault.rentals(rentalId);
+        (,,, uint64 endTime,,, ItemRentalVault.RentalStatus status) = vault.rentals(rentalId);
         if (status != ItemRentalVault.RentalStatus.ACTIVE) return;
 
         vm.warp(endTime + 1);
@@ -166,10 +168,12 @@ contract ItemRentalVaultInvariantTest is StdInvariant, Test {
             uint256 reservedAmount;
 
             for (uint256 listingId = 1; listingId <= nextListingId; ++listingId) {
-                (, uint256 listedItemId, uint256 amount,,, ItemRentalVault.ListingStatus status,) = vault.listings(listingId);
+                (, uint256 listedItemId, uint256 amount,,, ItemRentalVault.ListingStatus status,) =
+                    vault.listings(listingId);
                 if (
-                    listedItemId == itemId &&
-                    (status == ItemRentalVault.ListingStatus.LISTED || status == ItemRentalVault.ListingStatus.RENTED)
+                    listedItemId == itemId
+                        && (status == ItemRentalVault.ListingStatus.LISTED
+                            || status == ItemRentalVault.ListingStatus.RENTED)
                 ) {
                     reservedAmount += amount;
                 }

@@ -15,7 +15,8 @@ contract VaultFuzzTest is Test {
     function setUp() public {
         gold = new GoldToken(address(this), address(this), 2_000_000 ether);
         GuildTreasuryVaultV1 impl = new GuildTreasuryVaultV1();
-        bytes memory data = abi.encodeCall(GuildTreasuryVaultV1.initialize, (IERC20(address(gold)), address(this), address(0xFEE)));
+        bytes memory data =
+            abi.encodeCall(GuildTreasuryVaultV1.initialize, (IERC20(address(gold)), address(this), address(0xFEE)));
         vault = GuildTreasuryVaultV1(address(new ERC1967Proxy(address(impl), data)));
 
         gold.mint(user, 100_000 ether);

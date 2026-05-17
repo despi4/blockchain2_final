@@ -89,8 +89,7 @@ contract GameSystemInvariantTest is Test {
 
         GameConfigV1 impl = new GameConfigV1();
         bytes memory data = abi.encodeCall(
-            GameConfigV1.initialize,
-            (timelock, treasury, 1 ether, 30, 500, 10 ether, 1 days, true, true)
+            GameConfigV1.initialize, (timelock, treasury, 1 ether, 30, 500, 10 ether, 1 days, true, true)
         );
         config = GameConfigV1(address(new ERC1967Proxy(address(impl), data)));
 

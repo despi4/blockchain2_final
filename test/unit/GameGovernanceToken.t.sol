@@ -82,9 +82,7 @@ contract GameGovernanceTokenTest is Test {
         uint256 nonce = token.nonces(owner);
 
         bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonce, deadline));
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(OWNER_PK, digest);
 
         token.permit(owner, spender, value, deadline, v, r, s);

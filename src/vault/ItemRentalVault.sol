@@ -93,9 +93,13 @@ contract ItemRentalVault is Ownable, ReentrancyGuard, ERC1155Holder {
     event ProtocolFeeUpdated(uint256 feeBps);
     event TreasuryUpdated(address indexed treasury);
 
-    constructor(IERC1155 gameItems_, IERC20 goldToken_, address initialOwner, address treasury_, uint256 protocolFeeBps_)
-        Ownable(initialOwner)
-    {
+    constructor(
+        IERC1155 gameItems_,
+        IERC20 goldToken_,
+        address initialOwner,
+        address treasury_,
+        uint256 protocolFeeBps_
+    ) Ownable(initialOwner) {
         gameItems = gameItems_;
         goldToken = goldToken_;
         _setTreasury(treasury_);

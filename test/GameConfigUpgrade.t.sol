@@ -21,10 +21,7 @@ contract GameConfigUpgradeTest is Test {
         GameConfigV1 implementationV1 = new GameConfigV1();
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(implementationV1),
-            abi.encodeCall(
-                GameConfigV1.initialize,
-                (owner, treasury, 10 ether, 300, 500, 25 ether, 1 days, true, true)
-            )
+            abi.encodeCall(GameConfigV1.initialize, (owner, treasury, 10 ether, 300, 500, 25 ether, 1 days, true, true))
         );
 
         configV1 = GameConfigV1(address(proxy));

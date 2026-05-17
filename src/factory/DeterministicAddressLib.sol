@@ -11,7 +11,8 @@ library DeterministicAddressLib {
         pure
         returns (address)
     {
-        bytes memory bytecode = abi.encodePacked(type(ResourceAMM).creationCode, abi.encode(IERC20(token0), IERC20(token1)));
+        bytes memory bytecode =
+            abi.encodePacked(type(ResourceAMM).creationCode, abi.encode(IERC20(token0), IERC20(token1)));
         return Create2.computeAddress(salt, keccak256(bytecode), deployer);
     }
 }

@@ -59,8 +59,13 @@ contract CraftingSystemTest is Test {
     function testAdminCanCreateRecipe() external {
         _setSwordRecipe(true);
 
-        (uint256[] memory inputIds, uint256[] memory inputAmounts, uint256 outputItemId, uint256 outputAmount, bool active) =
-            craftingSystem.getRecipe(RECIPE_ID);
+        (
+            uint256[] memory inputIds,
+            uint256[] memory inputAmounts,
+            uint256 outputItemId,
+            uint256 outputAmount,
+            bool active
+        ) = craftingSystem.getRecipe(RECIPE_ID);
 
         assertEq(inputIds.length, 2);
         assertEq(inputAmounts.length, 2);

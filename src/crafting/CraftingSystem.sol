@@ -85,7 +85,9 @@ contract CraftingSystem is ICraftingSystem, AccessControl, Pausable, ReentrancyG
         uint256 outputAmount,
         bool active
     ) external onlyRole(MANAGER_ROLE) {
-        if (inputItemIds.length == 0 || inputItemIds.length != inputAmounts.length) revert InvalidInputLengths();
+        if (inputItemIds.length == 0 || inputItemIds.length != inputAmounts.length) {
+            revert InvalidInputLengths();
+        }
         if (outputItemId == 0 || outputAmount == 0) revert InvalidRecipe();
 
         for (uint256 i = 0; i < inputAmounts.length; ++i) {
