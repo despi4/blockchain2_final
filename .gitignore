@@ -1,0 +1,20 @@
+# Environment variables - NEVER commit!
+.env
+.env.local
+
+# Foundry
+out/
+cache/
+broadcast/
+coverage/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Root node_modules
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
