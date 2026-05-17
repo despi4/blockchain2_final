@@ -1,66 +1,59 @@
+# GameFi Economy - Blockchain Technologies 2 Final Project
+
+This repository contains the full capstone implementation for a GameFi economy protocol.
+It combines the core Solidity protocol, governance, frontend, deployment scripts, and subgraph work in one repo.
+
+## Main modules
+
+- `src/token/` - governance token, resource tokens, ERC1155 game items
+- `src/amm/` - constant-product AMM and LP token
+- `src/vault/` - rental vault and upgradeable treasury vault
+- `src/crafting/` - crafting logic for burning resources and minting items
+- `src/loot/` - VRF-style loot drop flow
+- `src/oracle/` - Chainlink-style price feed wrapper with staleness checks
+- `src/upgrade/` - UUPS upgradeable config contracts
+- `src/governance/` - governor and timelock contracts
+- `frontend/` - React frontend
+- `subgraph/` - The Graph indexing layer
+- `script/` - deployment and verification scripts
+
+## Governance
+
+The governance layer is built around a Governor plus Timelock setup so DAO-controlled parameters can be updated onchain.
+This includes fee parameters, crafting controls, loot configuration, and upgrade authority.
+
+## Frontend
+
+The frontend provides wallet connectivity, network checks, and protocol-facing pages for governance, items, marketplace flows, and related views.
+
+## Subgraph
+
+The subgraph indexes protocol activity such as swaps, crafting, loot, and governance activity for UI consumption.
+
 ## Foundry
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Build:
 
-Foundry consists of:
-
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
+```bash
+forge build
 ```
 
-### Test
+Test:
 
-```shell
-$ forge test
+```bash
+forge test
 ```
 
-### Format
+Coverage:
 
-```shell
-$ forge fmt
+```bash
+forge coverage --report summary
 ```
 
-### Gas Snapshots
+## Frontend local run
 
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+```bash
+cd frontend
+npm install
+npm run dev
 ```

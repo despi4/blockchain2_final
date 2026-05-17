@@ -11,3 +11,11 @@ via_ir = false
 
 [fuzz]
 runs = 256
+
+[invariant]
+runs = 256
+depth = 15
+
+[profile.ci]
+fuzz = { runs = 5000 }
+invariant = { runs = 1000, depth = 30 }
