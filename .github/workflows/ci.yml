@@ -29,13 +29,13 @@ jobs:
         run: forge build --sizes
 
       - name: Run tests (fuzz + invariant)
-        run: forge test --profile ci -v
+        run: FOUNDRY_PROFILE=ci forge test -v
 
       - name: Coverage report
         continue-on-error: true
         run: |
           mkdir -p coverage
-          forge coverage --report summary
+          FOUNDRY_PROFILE=ci forge coverage --report summary
 
   # ── Slither security scan ──────────────────────────────────────────────────
   slither:
