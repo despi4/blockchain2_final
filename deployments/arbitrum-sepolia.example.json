@@ -1,0 +1,28 @@
+{
+  "network": "arbitrum-sepolia",
+  "chainId": 421614,
+  "startBlocks": {
+    "resourceAmm": 0,
+    "gameFiGovernor": 0,
+    "gameGovernanceToken": 0,
+    "lootDrop": 0,
+    "craftingSystem": 0,
+    "guildTreasuryVault": 0,
+    "itemRentalVault": 0
+  },
+  "addresses": {
+    "resourceAmm": "0x0000000000000000000000000000000000000000",
+    "gameFiGovernor": "0x0000000000000000000000000000000000000000",
+    "gameGovernanceToken": "0x0000000000000000000000000000000000000000",
+    "goldToken": "0x0000000000000000000000000000000000000000",
+    "gameItems": "0x0000000000000000000000000000000000000000",
+    "lootDrop": "0x0000000000000000000000000000000000000000",
+    "craftingSystem": "0x0000000000000000000000000000000000000000",
+    "guildTreasuryVault": "0x0000000000000000000000000000000000000000",
+    "itemRentalVault": "0x0000000000000000000000000000000000000000",
+    "timelock": "0x0000000000000000000000000000000000000000"
+  },
+  "frontend": {
+    "subgraphUrl": "https://api.studio.thegraph.com/query/YOUR_ID/gamefi-economy-arbitrum-sepolia/version/latest"
+  }
+}

@@ -3,13 +3,12 @@ schema:
   file: ./schema.graphql
 
 dataSources:
-  # ── AMM ──────────────────────────────────────────────────────────────────────
   - kind: ethereum
-    name: GameFiAMM
+    name: ResourceAMM
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000002"  # replace after deploy
-      abi: GameFiAMM
+      address: "0x0000000000000000000000000000000000000000"
+      abi: ResourceAMM
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -17,21 +16,19 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Swap
-        - VaultDayData
       abis:
-        - name: GameFiAMM
-          file: ./abis/GameFiAMM.json
+        - name: ResourceAMM
+          file: ./abis/ResourceAMM.json
       eventHandlers:
-        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
+        - event: Swap(indexed address,indexed address,indexed address,uint256,uint256,address)
           handler: handleSwap
       file: ./src/amm.ts
 
-  # ── Governor ─────────────────────────────────────────────────────────────────
   - kind: ethereum
     name: GameFiGovernor
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000004"  # replace after deploy
+      address: "0x0000000000000000000000000000000000000000"
       abi: GameFiGovernor
       startBlock: 0
     mapping:
@@ -57,13 +54,12 @@ dataSources:
           handler: handleProposalCanceled
       file: ./src/governor.ts
 
-  # ── Governance Token (ERC20Votes) ─────────────────────────────────────────────
   - kind: ethereum
-    name: GameFiToken
+    name: GameGovernanceToken
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000001"  # replace after deploy
-      abi: GameFiToken
+      address: "0x0000000000000000000000000000000000000000"
+      abi: GameGovernanceToken
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -72,8 +68,8 @@ dataSources:
       entities:
         - TokenHolder
       abis:
-        - name: GameFiToken
-          file: ./abis/GameFiToken.json
+        - name: GameGovernanceToken
+          file: ./abis/GameGovernanceToken.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -83,13 +79,12 @@ dataSources:
           handler: handleDelegateVotesChanged
       file: ./src/token.ts
 
-  # ── Loot Drop (VRF) ──────────────────────────────────────────────────────────
   - kind: ethereum
-    name: GameFiLoot
+    name: LootDrop
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000007"  # replace after deploy
-      abi: GameFiLoot
+      address: "0x0000000000000000000000000000000000000000"
+      abi: LootDrop
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -98,22 +93,21 @@ dataSources:
       entities:
         - LootDrop
       abis:
-        - name: GameFiLoot
-          file: ./abis/GameFiLoot.json
+        - name: LootDrop
+          file: ./abis/LootDrop.json
       eventHandlers:
-        - event: LootRequested(indexed address,indexed uint256)
+        - event: LootRequested(indexed uint256,indexed address,uint256)
           handler: handleLootRequested
-        - event: LootFulfilled(indexed uint256,uint256[],uint256[])
+        - event: LootFulfilled(indexed uint256,indexed address,indexed uint256,uint256)
           handler: handleLootFulfilled
       file: ./src/loot.ts
 
-  # ── Crafting ──────────────────────────────────────────────────────────────────
   - kind: ethereum
-    name: GameFiCrafting
+    name: CraftingSystem
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000008"  # replace after deploy
-      abi: GameFiCrafting
+      address: "0x0000000000000000000000000000000000000000"
+      abi: CraftingSystem
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -122,9 +116,59 @@ dataSources:
       entities:
         - CraftingEvent
       abis:
-        - name: GameFiCrafting
-          file: ./abis/GameFiCrafting.json
+        - name: CraftingSystem
+          file: ./abis/CraftingSystem.json
       eventHandlers:
-        - event: ItemCrafted(indexed address,uint256[],uint256[],uint256,uint256)
-          handler: handleItemCrafted
+        - event: Crafted(indexed address,indexed uint256,uint256,indexed uint256,uint256)
+          handler: handleCrafted
       file: ./src/crafting.ts
+
+  - kind: ethereum
+    name: GuildTreasuryVault
+    network: arbitrum-sepolia
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: GuildTreasuryVaultV1
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VaultDayData
+      abis:
+        - name: GuildTreasuryVaultV1
+          file: ./abis/GuildTreasuryVaultV1.json
+      eventHandlers:
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+      file: ./src/vault.ts
+
+  - kind: ethereum
+    name: ItemRentalVault
+    network: arbitrum-sepolia
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: ItemRentalVault
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - RentalActivity
+      abis:
+        - name: ItemRentalVault
+          file: ./abis/ItemRentalVault.json
+      eventHandlers:
+        - event: ItemListed(indexed uint256,indexed address,indexed uint256,uint256,uint256,uint64)
+          handler: handleItemListed
+        - event: ItemRented(indexed uint256,indexed uint256,indexed address,uint64,uint256,uint256)
+          handler: handleItemRented
+        - event: RentalEnded(indexed uint256,indexed uint256,indexed address)
+          handler: handleRentalEnded
+        - event: ListingCancelled(indexed uint256,indexed address)
+          handler: handleListingCancelled
+      file: ./src/rental.ts

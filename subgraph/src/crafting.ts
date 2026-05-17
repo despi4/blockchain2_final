@@ -1,14 +1,17 @@
-import { ItemCrafted } from "../generated/GameFiCrafting/GameFiCrafting";
+import { Crafted } from "../generated/CraftingSystem/CraftingSystem";
 import { CraftingEvent } from "../generated/schema";
 
-export function handleItemCrafted(event: ItemCrafted): void {
-  let craft           = new CraftingEvent(event.transaction.hash.concatI32(event.logIndex.toI32()));
-  craft.crafter       = event.params.crafter;
-  craft.inputItems    = event.params.inputIds;
-  craft.inputAmounts  = event.params.inputAmounts;
-  craft.outputItem    = event.params.outputId;
-  craft.outputAmount  = event.params.outputAmount;
-  craft.timestamp     = event.block.timestamp;
-  craft.txHash        = event.transaction.hash;
-  craft.save();
+export function handleCrafted(event: Crafted): void {
+  let id = event.transaction.hash.toHexString().concat("-").concat(event.logIndex.toString());
+  let craftingEvent = new CraftingEvent(id);
+
+  craftingEvent.user = event.params.user;
+  craftingEvent.recipeId = event.params.recipeId;
+  craftingEvent.amount = event.params.amount;
+  craftingEvent.outputItemId = event.params.outputItemId;
+  craftingEvent.outputAmount = event.params.outputAmount;
+  craftingEvent.timestamp = event.block.timestamp;
+  craftingEvent.txHash = event.transaction.hash;
+
+  craftingEvent.save();
 }

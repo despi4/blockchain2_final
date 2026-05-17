@@ -1,113 +1,65 @@
-# GameFi Economy — Blockchain Technologies 2 Final Project
+# GameFi Economy - Blockchain Technologies 2 Final Project
 
-Option B. Two-person project: Person 1 built the core contracts (token, AMM, vault, loot, crafting), Person 2 (this repo) built the DAO governance layer, frontend, subgraph, and deployment tooling.
+This repository contains the full capstone implementation for a GameFi economy protocol.
+It combines the core Solidity protocol, governance, frontend, deployment scripts, and subgraph work in one repo.
 
----
+## Canonical testnet
 
-## What this project is
+The repo is now aligned around `Arbitrum Sepolia` as the default L2 target:
 
-An on-chain GameFi economy where players trade resources, craft items, and earn loot drops — all governed by token holders through a DAO. The main idea is that game parameters (drop rates, crafting costs, fees) are not hardcoded; they go through a governance vote before any change takes effect.
+- frontend wallet config targets `Arbitrum Sepolia`
+- subgraph sources target `arbitrum-sepolia`
+- `.env.example` uses `ARBITRUM_SEPOLIA_RPC_URL` and `ARBISCAN_API_KEY`
+- deployment placeholders live in [deployments/arbitrum-sepolia.example.json](deployments/arbitrum-sepolia.example.json)
 
-The governance flow works like this:
-- Anyone holding ≥ 1% of the token supply can submit a proposal
-- Voting is open for ~1 week (50 400 blocks on Arbitrum)
-- If 4% quorum is reached and For > Against, the proposal succeeds
-- It then sits in a 2-day timelock before anyone can execute it
+## Main modules
 
-This means even if someone writes a malicious proposal, there's a 2-day window to notice before it runs.
+- `src/token/` - governance token, resource tokens, ERC1155 game items
+- `src/amm/` - constant-product AMM and LP token
+- `src/vault/` - rental vault and upgradeable treasury vault
+- `src/crafting/` - crafting logic for burning resources and minting items
+- `src/loot/` - VRF-style loot drop flow
+- `src/oracle/` - Chainlink-style price feed wrapper with staleness checks
+- `src/upgrade/` - UUPS upgradeable config contracts
+- `src/governance/` - governor and timelock contracts
+- `frontend/` - React frontend
+- `subgraph/` - The Graph indexing layer
+- `script/` - deployment and verification scripts
 
----
+## Governance
 
-## Project structure
+The governance layer is built around a Governor plus Timelock setup so DAO-controlled parameters can be updated onchain.
+This includes fee parameters, crafting controls, loot configuration, and upgrade authority.
 
-```
-blockchain2_final/
-├── src/governance/
-│   ├── GameFiGovernor.sol      # OpenZeppelin Governor with our settings
-│   └── GameFiTimelock.sol      # 2-day timelock, self-governed
-├── test/governance/
-│   └── GovernorTest.t.sol      # 16 tests covering full proposal lifecycle
-├── script/
-│   ├── Deploy.s.sol            # deploys timelock + governor, wires roles
-│   └── PostDeployVerify.s.sol  # sanity checks after deploy
-├── subgraph/                   # The Graph indexing (7 entities)
-├── frontend/                   # React + Wagmi v2 + RainbowKit v2
-└── .github/workflows/ci.yml    # forge + slither + solhint + eslint
-```
+## Frontend
 
-Person 1's contracts (token, AMM, vault, loot, crafting) live in a separate repo and are referenced by address.
+The frontend provides wallet connectivity, network checks, and protocol-facing pages for governance, items, marketplace flows, and related views.
 
----
+## Subgraph
 
-## Governor parameters
+The subgraph indexes protocol activity such as swaps, crafting, loot, and governance activity for UI consumption.
 
-| Parameter | Value | Reason |
-|---|---|---|
-| Voting delay | 7 200 blocks (~1 day) | gives token holders time to notice a proposal |
-| Voting period | 50 400 blocks (~1 week) | enough time for participation |
-| Quorum | 4% of total supply | reasonable threshold on a 1M token supply |
-| Proposal threshold | 1% (10 000 GFI) | filters spam, doesn't block legitimate holders |
-| Timelock delay | 2 days | window to react before execution |
+## Foundry
 
-Timelock is self-governed — the deployer gives up admin rights at deploy time. Only the governor can queue proposals.
-
----
-
-## Running the tests
-
-You need Foundry installed (`curl -L https://foundry.paradigm.xyz | bash`).
+Build:
 
 ```bash
-forge test -v
+forge build
 ```
 
-All 16 tests should pass. The test suite covers:
+Test:
 
-- Governor name, delay, period, quorum (unit)
-- Proposal threshold enforcement
-- Voting power after delegation
-- No admin backdoor on timelock
-- Full lifecycle: propose → vote → queue → execute
-- Quorum not met → Defeated
-- Double-vote reverts
-- Against votes defeat proposal
-- Fuzz: voting power matches delegated balance (1000 runs)
+```bash
+forge test
+```
+
+Coverage:
 
 ```bash
 forge coverage --report summary
 ```
 
----
-
-## Deploy (after Person 1 deploys their contracts)
-
-Copy `.env.example` to `.env` and fill in your values. Never commit `.env`.
-
-```bash
-forge script script/Deploy.s.sol:Deploy \
-  --rpc-url $ARBITRUM_SEPOLIA_RPC_URL \
-  --broadcast \
-  --verify \
-  --etherscan-api-key $ARBISCAN_API_KEY \
-  -vvvv
-```
-
-Then verify the deployment came out right:
-
-```bash
-forge script script/PostDeployVerify.s.sol:PostDeployVerify \
-  --rpc-url $ARBITRUM_SEPOLIA_RPC_URL -vvv
-```
-
-You should see `=== ALL CHECKS PASSED ===`.
-
-After deploy, update the addresses in:
-- `frontend/src/config/contracts.js`
-- `subgraph/subgraph.yaml`
-
----
-
-## Frontend
+## Frontend local run
 
 ```bash
 cd frontend
@@ -115,47 +67,42 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. Connect MetaMask on Arbitrum Sepolia. The app will prompt you to switch networks if you're on the wrong chain.
+Frontend addresses are read from `frontend/.env.local`. Start from [frontend/.env.example](frontend/.env.example) and fill in the deployed addresses.
 
-Pages:
-- **Dashboard** — token balance, voting power, delegate, recent swaps from subgraph
-- **Items** — ERC-1155 balances, VRF loot drops, crafting
-- **Marketplace** — swap tokens, add liquidity, vault deposit
-- **Governance** — browse proposals, cast votes, see state + vote counts
+## Subgraph wiring
 
----
+The subgraph now indexes the canonical contracts and real event signatures for:
 
-## Subgraph
+- `ResourceAMM`
+- `GameFiGovernor`
+- `GameGovernanceToken`
+- `LootDrop`
+- `CraftingSystem`
+- `GuildTreasuryVaultV1`
+- `ItemRentalVault`
 
-The subgraph indexes 5 contract event streams into 7 GraphQL entities: Swap, Proposal, Vote, TokenHolder, LootDrop, CraftingEvent, VaultDayData.
+Before deploying the subgraph:
 
-Deploy to The Graph Studio after filling addresses in `subgraph/subgraph.yaml`:
+1. Copy real addresses and `startBlock` values into `deployments/arbitrum-sepolia.json` or patch [subgraph/subgraph.yaml](subgraph/subgraph.yaml) directly
+2. Keep the ABI files in `subgraph/abis/` in sync with `forge build`
+3. Set `VITE_SUBGRAPH_URL` in the frontend after the Graph deployment is live
+
+To avoid editing the frontend and subgraph by hand every time, copy [deployments/arbitrum-sepolia.example.json](deployments/arbitrum-sepolia.example.json) to `deployments/arbitrum-sepolia.json`, fill in the deployed addresses, and run:
+
+```bash
+node script/syncDeploymentConfig.mjs
+```
+
+That command writes:
+
+- `frontend/.env.local`
+- `subgraph/subgraph.yaml`
+
+Local subgraph build:
 
 ```bash
 cd subgraph
-graph codegen && graph build
-graph deploy --studio gamefi-economy
+npm install
+npm run codegen
+npm run build
 ```
-
----
-
-## Network
-
-Deployed on **Arbitrum Sepolia** (chainId 421614). We picked Arbitrum over Ethereum mainnet or Base Sepolia because:
-- we already had test ETH there
-- L2 fees are low enough that governance transactions are practical for actual users
-- Arbitrum has good Foundry + The Graph support
-
----
-
-## CI
-
-GitHub Actions runs on every push:
-- `forge fmt --check` — formatting
-- `forge build --sizes` — compilation
-- `forge test --profile ci` — tests with 5000 fuzz runs
-- `forge coverage` — coverage report uploaded as artifact
-- Slither — static analysis, fails on high-severity findings
-- Solhint — Solidity style linting
-- ESLint + Prettier — frontend code quality
-- `vite build` — production build check

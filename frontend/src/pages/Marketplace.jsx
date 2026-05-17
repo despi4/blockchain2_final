@@ -1,18 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { formatUnits, parseUnits } from "viem";
-import { ADDRESSES, AMM_ABI, VAULT_ABI } from "../config/contracts";
+import {
+  ADDRESSES,
+  AMM_ABI,
+  ERC20_ABI,
+  LP_TOKEN_ABI,
+  isConfiguredAddress,
+} from "../config/contracts";
+import ConfigNotice from "../components/ConfigNotice";
 import { parseContractError } from "../hooks/useToast";
+import { formatToken, parseTokenInput, shortAddress } from "../utils/format";
 
-function fmt(val, decimals = 18, dp = 4) {
-  if (val === undefined || val === null) return "—";
-  try {
-    const n = parseFloat(formatUnits(val, decimals));
-    return n.toLocaleString(undefined, { maximumFractionDigits: dp });
-  } catch {
-    return "—";
-  }
-}
+const MAX_UINT256 = 2n ** 256n - 1n;
 
 function Panel({ title, children }) {
   return (
@@ -27,411 +26,365 @@ function Panel({ title, children }) {
 
 export default function Marketplace({ toast }) {
   const { address, isConnected } = useAccount();
+  const [swapDirection, setSwapDirection] = useState("0to1");
+  const [swapAmount, setSwapAmount] = useState("");
+  const [liquidity0, setLiquidity0] = useState("");
+  const [liquidity1, setLiquidity1] = useState("");
+  const [removeLpAmount, setRemoveLpAmount] = useState("");
 
-  // ── Swap state ─────────────────────────────────────────────────────────────
-  const [swapIn, setSwapIn] = useState("");
-  const [swapDir, setSwapDir] = useState(0); // 0 = token0→token1, 1 = token1→token0
+  const configured = isConfiguredAddress(ADDRESSES.AMM);
 
-  // ── Deposit state ──────────────────────────────────────────────────────────
-  const [depositAmt, setDepositAmt] = useState("");
+  const { data: token0Address } = useReadContract({
+    address: ADDRESSES.AMM,
+    abi: AMM_ABI,
+    functionName: "token0",
+    query: { enabled: configured },
+  });
 
-  // ── Add Liquidity state ────────────────────────────────────────────────────
-  const [liq0, setLiq0] = useState("");
-  const [liq1, setLiq1] = useState("");
+  const { data: token1Address } = useReadContract({
+    address: ADDRESSES.AMM,
+    abi: AMM_ABI,
+    functionName: "token1",
+    query: { enabled: configured },
+  });
 
-  // ── Reads ──────────────────────────────────────────────────────────────────
+  const { data: lpTokenAddress } = useReadContract({
+    address: ADDRESSES.AMM,
+    abi: AMM_ABI,
+    functionName: "lpToken",
+    query: { enabled: configured },
+  });
+
   const { data: reserves, refetch: refetchReserves } = useReadContract({
     address: ADDRESSES.AMM,
     abi: AMM_ABI,
     functionName: "getReserves",
+    query: { enabled: configured },
   });
 
-  const { data: lpSupply } = useReadContract({
-    address: ADDRESSES.AMM,
-    abi: AMM_ABI,
-    functionName: "totalSupply",
+  const { data: token0Symbol } = useReadContract({
+    address: token0Address,
+    abi: ERC20_ABI,
+    functionName: "symbol",
+    query: { enabled: isConfiguredAddress(token0Address) },
   });
 
-  const { data: vaultAssets, refetch: refetchVault } = useReadContract({
-    address: ADDRESSES.VAULT,
-    abi: VAULT_ABI,
-    functionName: "totalAssets",
+  const { data: token1Symbol } = useReadContract({
+    address: token1Address,
+    abi: ERC20_ABI,
+    functionName: "symbol",
+    query: { enabled: isConfiguredAddress(token1Address) },
   });
 
-  const { data: vaultSupply } = useReadContract({
-    address: ADDRESSES.VAULT,
-    abi: VAULT_ABI,
-    functionName: "totalSupply",
-  });
-
-  const { data: userVaultShares, refetch: refetchShares } = useReadContract({
-    address: ADDRESSES.VAULT,
-    abi: VAULT_ABI,
+  const { data: token0Balance } = useReadContract({
+    address: token0Address,
+    abi: ERC20_ABI,
     functionName: "balanceOf",
     args: [address],
-    query: { enabled: !!address },
+    query: { enabled: !!address && isConfiguredAddress(token0Address) },
   });
 
-  // Expected output for swap
-  const swapInBig = (() => {
-    try {
-      return swapIn ? parseUnits(swapIn, 18) : 0n;
-    } catch {
-      return 0n;
-    }
-  })();
+  const { data: token1Balance } = useReadContract({
+    address: token1Address,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [address],
+    query: { enabled: !!address && isConfiguredAddress(token1Address) },
+  });
 
-  const { data: amountOut } = useReadContract({
+  const { data: token0Allowance } = useReadContract({
+    address: token0Address,
+    abi: ERC20_ABI,
+    functionName: "allowance",
+    args: [address, ADDRESSES.AMM],
+    query: { enabled: !!address && isConfiguredAddress(token0Address) && configured },
+  });
+
+  const { data: token1Allowance } = useReadContract({
+    address: token1Address,
+    abi: ERC20_ABI,
+    functionName: "allowance",
+    args: [address, ADDRESSES.AMM],
+    query: { enabled: !!address && isConfiguredAddress(token1Address) && configured },
+  });
+
+  const { data: lpBalance } = useReadContract({
+    address: lpTokenAddress,
+    abi: LP_TOKEN_ABI,
+    functionName: "balanceOf",
+    args: [address],
+    query: { enabled: !!address && isConfiguredAddress(lpTokenAddress) },
+  });
+
+  const { data: lpTotalSupply } = useReadContract({
+    address: lpTokenAddress,
+    abi: LP_TOKEN_ABI,
+    functionName: "totalSupply",
+    query: { enabled: isConfiguredAddress(lpTokenAddress) },
+  });
+
+  const swapAmountWei = parseTokenInput(swapAmount);
+  const liquidity0Wei = parseTokenInput(liquidity0);
+  const liquidity1Wei = parseTokenInput(liquidity1);
+  const removeLpAmountWei = parseTokenInput(removeLpAmount);
+
+  const reserveIn = reserves ? (swapDirection === "0to1" ? reserves[0] : reserves[1]) : undefined;
+  const reserveOut = reserves ? (swapDirection === "0to1" ? reserves[1] : reserves[0]) : undefined;
+
+  const { data: quotedAmountOut } = useReadContract({
     address: ADDRESSES.AMM,
     abi: AMM_ABI,
     functionName: "getAmountOut",
-    args: reserves
-      ? swapDir === 0
-        ? [swapInBig, reserves[0], reserves[1]]
-        : [swapInBig, reserves[1], reserves[0]]
-      : [0n, 1n, 1n],
-    query: { enabled: !!reserves && swapInBig > 0n },
+    args: reserveIn !== undefined && reserveOut !== undefined ? [swapAmountWei, reserveIn, reserveOut] : [0n, 1n, 1n],
+    query: { enabled: configured && swapAmountWei > 0n && reserveIn !== undefined && reserveOut !== undefined },
   });
 
-  // ── Swap write ─────────────────────────────────────────────────────────────
   const {
-    writeContract: writeSwap,
-    data: swapHash,
-    isPending: swapPending,
-    error: swapError,
+    writeContract,
+    data: txHash,
+    isPending,
+    error,
   } = useWriteContract();
 
-  const { isLoading: swapConfirming, isSuccess: swapSuccess } = useWaitForTransactionReceipt({
-    hash: swapHash,
-  });
+  const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
   useEffect(() => {
-    if (swapSuccess) {
-      toast?.success("Swap confirmed!");
-      setSwapIn("");
+    if (isSuccess) {
+      toast?.success("Transaction confirmed.");
       refetchReserves();
     }
-  }, [swapSuccess]);
+  }, [isSuccess, refetchReserves, toast]);
 
   useEffect(() => {
-    if (swapError) toast?.error(parseContractError(swapError));
-  }, [swapError]);
+    if (error) toast?.error(parseContractError(error));
+  }, [error, toast]);
+
+  const needsToken0Approval = swapAmountWei > 0n && swapDirection === "0to1" && (token0Allowance || 0n) < swapAmountWei;
+  const needsToken1Approval = swapAmountWei > 0n && swapDirection === "1to0" && (token1Allowance || 0n) < swapAmountWei;
+  const needsLiquidity0Approval = liquidity0Wei > 0n && (token0Allowance || 0n) < liquidity0Wei;
+  const needsLiquidity1Approval = liquidity1Wei > 0n && (token1Allowance || 0n) < liquidity1Wei;
+
+  const approveToken = (tokenAddress) => {
+    writeContract({
+      address: tokenAddress,
+      abi: ERC20_ABI,
+      functionName: "approve",
+      args: [ADDRESSES.AMM, MAX_UINT256],
+    });
+  };
 
   const handleSwap = () => {
-    if (!swapIn || swapInBig === 0n) {
-      toast?.error("Enter an amount");
+    if (swapAmountWei === 0n || !quotedAmountOut) {
+      toast?.error("Enter a valid swap amount.");
       return;
     }
-    if (!amountOut) {
-      toast?.error("Unable to calculate output");
-      return;
-    }
-    const slippage = (amountOut * 95n) / 100n; // 5% slippage
-    writeSwap({
+
+    const minAmountOut = (quotedAmountOut * 95n) / 100n;
+    writeContract({
       address: ADDRESSES.AMM,
       abi: AMM_ABI,
-      functionName: "swap",
-      args: swapDir === 0 ? [0n, slippage, address, "0x"] : [slippage, 0n, address, "0x"],
+      functionName: swapDirection === "0to1" ? "swapExactToken0ForToken1" : "swapExactToken1ForToken0",
+      args: [swapAmountWei, minAmountOut, address],
     });
   };
-
-  // ── Deposit write ──────────────────────────────────────────────────────────
-  const {
-    writeContract: writeDeposit,
-    data: depositHash,
-    isPending: depositPending,
-    error: depositError,
-  } = useWriteContract();
-
-  const { isLoading: depositConfirming, isSuccess: depositSuccess } = useWaitForTransactionReceipt({
-    hash: depositHash,
-  });
-
-  useEffect(() => {
-    if (depositSuccess) {
-      toast?.success("Deposit confirmed!");
-      setDepositAmt("");
-      refetchVault();
-      refetchShares();
-    }
-  }, [depositSuccess]);
-
-  useEffect(() => {
-    if (depositError) toast?.error(parseContractError(depositError));
-  }, [depositError]);
-
-  const handleDeposit = () => {
-    const amt = (() => {
-      try {
-        return parseUnits(depositAmt, 18);
-      } catch {
-        return 0n;
-      }
-    })();
-    if (!depositAmt || amt === 0n) {
-      toast?.error("Enter an amount");
-      return;
-    }
-    writeDeposit({
-      address: ADDRESSES.VAULT,
-      abi: VAULT_ABI,
-      functionName: "deposit",
-      args: [amt, address],
-    });
-  };
-
-  // ── Add Liquidity write ────────────────────────────────────────────────────
-  const {
-    writeContract: writeLiquidity,
-    data: liqHash,
-    isPending: liqPending,
-    error: liqError,
-  } = useWriteContract();
-
-  const { isLoading: liqConfirming, isSuccess: liqSuccess } = useWaitForTransactionReceipt({
-    hash: liqHash,
-  });
-
-  useEffect(() => {
-    if (liqSuccess) {
-      toast?.success("Liquidity added!");
-      setLiq0("");
-      setLiq1("");
-      refetchReserves();
-    }
-  }, [liqSuccess]);
-
-  useEffect(() => {
-    if (liqError) toast?.error(parseContractError(liqError));
-  }, [liqError]);
 
   const handleAddLiquidity = () => {
-    const a0 = (() => {
-      try {
-        return parseUnits(liq0, 18);
-      } catch {
-        return 0n;
-      }
-    })();
-    const a1 = (() => {
-      try {
-        return parseUnits(liq1, 18);
-      } catch {
-        return 0n;
-      }
-    })();
-    if (!liq0 || !liq1 || a0 === 0n || a1 === 0n) {
-      toast?.error("Enter both amounts");
+    if (liquidity0Wei === 0n || liquidity1Wei === 0n) {
+      toast?.error("Enter both liquidity amounts.");
       return;
     }
-    writeLiquidity({
+
+    writeContract({
       address: ADDRESSES.AMM,
       abi: AMM_ABI,
       functionName: "addLiquidity",
-      args: [a0, a1, (a0 * 95n) / 100n, (a1 * 95n) / 100n, address],
+      args: [liquidity0Wei, liquidity1Wei, address],
     });
   };
 
-  const pricePerShare =
-    vaultSupply && vaultAssets && vaultSupply > 0n
-      ? Number(formatUnits(vaultAssets, 18)) / Number(formatUnits(vaultSupply, 18))
-      : null;
+  const handleRemoveLiquidity = () => {
+    if (removeLpAmountWei === 0n) {
+      toast?.error("Enter an LP amount to remove.");
+      return;
+    }
+
+    writeContract({
+      address: ADDRESSES.AMM,
+      abi: AMM_ABI,
+      functionName: "removeLiquidity",
+      args: [removeLpAmountWei, address],
+    });
+  };
 
   return (
     <div className="page">
-      <h1 className="page-title">Marketplace</h1>
+      <h1 className="page-title">AMM Marketplace</h1>
 
-      {/* ── Pool Info ───────────────────────────────────────────────────── */}
+      <ConfigNotice
+        title="Frontend contract config"
+        lines={!configured ? ["Set VITE_AMM_ADDRESS and related token addresses."] : []}
+      />
+
       <div className="grid-2 section-gap">
         <div className="card">
-          <div className="card-title">AMM Pool</div>
+          <div className="card-title">Pool Addresses</div>
+          <div className="stat-row">
+            <span className="label">Token 0</span>
+            <span className="value mono">{shortAddress(token0Address)}</span>
+          </div>
+          <div className="stat-row">
+            <span className="label">Token 1</span>
+            <span className="value mono">{shortAddress(token1Address)}</span>
+          </div>
+          <div className="stat-row">
+            <span className="label">LP Token</span>
+            <span className="value mono">{shortAddress(lpTokenAddress)}</span>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-title">Pool State</div>
           <div className="stat-row">
             <span className="label">Reserve 0</span>
-            <span className="value mono">{fmt(reserves?.[0])}</span>
+            <span className="value">{formatToken(reserves?.[0])}</span>
           </div>
           <div className="stat-row">
             <span className="label">Reserve 1</span>
-            <span className="value mono">{fmt(reserves?.[1])}</span>
+            <span className="value">{formatToken(reserves?.[1])}</span>
           </div>
           <div className="stat-row">
             <span className="label">LP Supply</span>
-            <span className="value mono">{fmt(lpSupply)}</span>
+            <span className="value">{formatToken(lpTotalSupply)}</span>
           </div>
-          {reserves && reserves[0] > 0n && reserves[1] > 0n && (
-            <div className="stat-row">
-              <span className="label">Price T0/T1</span>
-              <span className="value mono">
-                {(
-                  Number(formatUnits(reserves[1], 18)) / Number(formatUnits(reserves[0], 18))
-                ).toFixed(4)}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="card">
-          <div className="card-title">ERC-4626 Vault</div>
-          <div className="stat-row">
-            <span className="label">Total Assets</span>
-            <span className="value mono">{fmt(vaultAssets)}</span>
-          </div>
-          <div className="stat-row">
-            <span className="label">Total Shares</span>
-            <span className="value mono">{fmt(vaultSupply)}</span>
-          </div>
-          <div className="stat-row">
-            <span className="label">Price / Share</span>
-            <span className="value mono">
-              {pricePerShare !== null ? pricePerShare.toFixed(6) : "—"}
-            </span>
-          </div>
-          {isConnected && (
-            <div className="stat-row">
-              <span className="label">Your Shares</span>
-              <span className="value mono">{fmt(userVaultShares)}</span>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ── Swap ────────────────────────────────────────────────────────── */}
-      <Panel title="Swap Tokens">
+      <Panel title="Your Balances">
         {!isConnected ? (
-          <p className="text-sm text-muted">Connect your wallet to swap.</p>
+          <p className="text-sm text-muted">Connect wallet to load balances.</p>
+        ) : (
+          <div className="grid-2">
+            <div className="stat-row">
+              <span className="label">{token0Symbol || "Token 0"}</span>
+              <span className="value">{formatToken(token0Balance)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="label">{token1Symbol || "Token 1"}</span>
+              <span className="value">{formatToken(token1Balance)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="label">LP balance</span>
+              <span className="value">{formatToken(lpBalance)}</span>
+            </div>
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="Swap">
+        {!isConnected ? (
+          <p className="text-sm text-muted">Connect wallet to swap.</p>
         ) : (
           <>
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem" }}>
-              <div style={{ flex: 1 }}>
-                <label className="text-sm text-muted">Direction</label>
-                <select
-                  value={swapDir}
-                  onChange={(e) => setSwapDir(Number(e.target.value))}
-                  className="mt-1"
-                >
-                  <option value={0}>Token 0 → Token 1</option>
-                  <option value={1}>Token 1 → Token 0</option>
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label className="text-sm text-muted">Amount In</label>
-                <input
-                  className="mt-1"
-                  type="number"
-                  min="0"
-                  placeholder="0.0"
-                  value={swapIn}
-                  onChange={(e) => setSwapIn(e.target.value)}
-                />
-              </div>
+            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
+              <select value={swapDirection} onChange={(event) => setSwapDirection(event.target.value)} style={{ maxWidth: "220px" }}>
+                <option value="0to1">{token0Symbol || "Token 0"} to {token1Symbol || "Token 1"}</option>
+                <option value="1to0">{token1Symbol || "Token 1"} to {token0Symbol || "Token 0"}</option>
+              </select>
+              <input
+                type="number"
+                min="0"
+                placeholder="Swap amount"
+                value={swapAmount}
+                onChange={(event) => setSwapAmount(event.target.value)}
+                style={{ maxWidth: "220px" }}
+              />
             </div>
 
-            {amountOut !== undefined && swapIn && (
-              <div className="card" style={{ background: "var(--bg3)", marginBottom: "0.75rem" }}>
-                <div className="stat-row">
-                  <span className="label">Expected output (after 0.3% fee)</span>
-                  <span className="value mono">{fmt(amountOut)}</span>
-                </div>
-                <div className="stat-row">
-                  <span className="label">Min received (5% slippage)</span>
-                  <span className="value mono">{fmt((amountOut * 95n) / 100n)}</span>
-                </div>
-              </div>
+            <div className="stat-row">
+              <span className="label">Quoted output</span>
+              <span className="value">{formatToken(quotedAmountOut)}</span>
+            </div>
+            <div className="stat-row" style={{ marginBottom: "0.75rem" }}>
+              <span className="label">Minimum out (5% slippage)</span>
+              <span className="value">{quotedAmountOut ? formatToken((quotedAmountOut * 95n) / 100n) : "--"}</span>
+            </div>
+
+            {needsToken0Approval && (
+              <button className="btn-secondary" onClick={() => approveToken(token0Address)} style={{ marginRight: "0.75rem" }}>
+                Approve {token0Symbol || "Token 0"}
+              </button>
+            )}
+            {needsToken1Approval && (
+              <button className="btn-secondary" onClick={() => approveToken(token1Address)} style={{ marginRight: "0.75rem" }}>
+                Approve {token1Symbol || "Token 1"}
+              </button>
             )}
 
-            <button
-              className="btn-primary"
-              style={{ width: "100%" }}
-              disabled={swapPending || swapConfirming || !swapIn}
-              onClick={handleSwap}
-            >
-              {swapPending || swapConfirming ? (
-                <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} />{" "}
-                  {swapConfirming ? "Confirming…" : "Waiting…"}
-                </>
-              ) : (
-                "Swap"
-              )}
+            <button className="btn-primary" disabled={isPending || confirming} onClick={handleSwap}>
+              {isPending || confirming ? "Submitting..." : "Swap"}
             </button>
           </>
         )}
       </Panel>
 
-      {/* ── Deposit into Vault ──────────────────────────────────────────── */}
-      <Panel title="Deposit into Vault (ERC-4626)">
-        {!isConnected ? (
-          <p className="text-sm text-muted">Connect your wallet to deposit.</p>
-        ) : (
-          <>
-            <p className="text-sm text-muted" style={{ marginBottom: "0.75rem" }}>
-              Deposit assets to receive vault shares (vGFI). Shares appreciate as the vault earns
-              yield.
-            </p>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <input
-                type="number"
-                min="0"
-                placeholder="Amount to deposit"
-                value={depositAmt}
-                onChange={(e) => setDepositAmt(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <button
-                className="btn-primary"
-                disabled={depositPending || depositConfirming || !depositAmt}
-                onClick={handleDeposit}
-              >
-                {depositPending || depositConfirming ? (
-                  <>
-                    <span className="spinner" style={{ width: 14, height: 14 }} />{" "}
-                    {depositConfirming ? "Confirming…" : "Waiting…"}
-                  </>
-                ) : (
-                  "Deposit"
-                )}
-              </button>
-            </div>
-          </>
-        )}
-      </Panel>
-
-      {/* ── Add Liquidity ───────────────────────────────────────────────── */}
       <Panel title="Add Liquidity">
         {!isConnected ? (
-          <p className="text-sm text-muted">Connect your wallet to add liquidity.</p>
+          <p className="text-sm text-muted">Connect wallet to add liquidity.</p>
         ) : (
           <>
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
               <input
                 type="number"
                 min="0"
-                placeholder="Amount Token 0"
-                value={liq0}
-                onChange={(e) => setLiq0(e.target.value)}
+                placeholder={`${token0Symbol || "Token 0"} amount`}
+                value={liquidity0}
+                onChange={(event) => setLiquidity0(event.target.value)}
               />
               <input
                 type="number"
                 min="0"
-                placeholder="Amount Token 1"
-                value={liq1}
-                onChange={(e) => setLiq1(e.target.value)}
+                placeholder={`${token1Symbol || "Token 1"} amount`}
+                value={liquidity1}
+                onChange={(event) => setLiquidity1(event.target.value)}
               />
             </div>
-            <button
-              className="btn-primary"
-              style={{ width: "100%" }}
-              disabled={liqPending || liqConfirming || !liq0 || !liq1}
-              onClick={handleAddLiquidity}
-            >
-              {liqPending || liqConfirming ? (
-                <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} />{" "}
-                  {liqConfirming ? "Confirming…" : "Waiting…"}
-                </>
-              ) : (
-                "Add Liquidity"
-              )}
+
+            {needsLiquidity0Approval && (
+              <button className="btn-secondary" onClick={() => approveToken(token0Address)} style={{ marginRight: "0.75rem" }}>
+                Approve {token0Symbol || "Token 0"}
+              </button>
+            )}
+            {needsLiquidity1Approval && (
+              <button className="btn-secondary" onClick={() => approveToken(token1Address)} style={{ marginRight: "0.75rem" }}>
+                Approve {token1Symbol || "Token 1"}
+              </button>
+            )}
+
+            <button className="btn-primary" disabled={isPending || confirming} onClick={handleAddLiquidity}>
+              {isPending || confirming ? "Submitting..." : "Add Liquidity"}
             </button>
+          </>
+        )}
+      </Panel>
+
+      <Panel title="Remove Liquidity">
+        {!isConnected ? (
+          <p className="text-sm text-muted">Connect wallet to remove liquidity.</p>
+        ) : (
+          <>
+            <input
+              type="number"
+              min="0"
+              placeholder="LP amount"
+              value={removeLpAmount}
+              onChange={(event) => setRemoveLpAmount(event.target.value)}
+              style={{ maxWidth: "240px", marginBottom: "0.75rem" }}
+            />
+            <div>
+              <button className="btn-primary" disabled={isPending || confirming} onClick={handleRemoveLiquidity}>
+                {isPending || confirming ? "Submitting..." : "Remove Liquidity"}
+              </button>
+            </div>
           </>
         )}
       </Panel>

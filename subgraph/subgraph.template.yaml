@@ -1,0 +1,174 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum
+    name: ResourceAMM
+    network: arbitrum-sepolia
+    source:
+      address: "{{RESOURCE_AMM_ADDRESS}}"
+      abi: ResourceAMM
+      startBlock: {{RESOURCE_AMM_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Swap
+      abis:
+        - name: ResourceAMM
+          file: ./abis/ResourceAMM.json
+      eventHandlers:
+        - event: Swap(indexed address,indexed address,indexed address,uint256,uint256,address)
+          handler: handleSwap
+      file: ./src/amm.ts
+
+  - kind: ethereum
+    name: GameFiGovernor
+    network: arbitrum-sepolia
+    source:
+      address: "{{GAMEFI_GOVERNOR_ADDRESS}}"
+      abi: GameFiGovernor
+      startBlock: {{GAMEFI_GOVERNOR_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Proposal
+        - Vote
+      abis:
+        - name: GameFiGovernor
+          file: ./abis/GameFiGovernor.json
+      eventHandlers:
+        - event: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
+          handler: handleProposalCreated
+        - event: VoteCast(indexed address,uint256,uint8,uint256,string)
+          handler: handleVoteCast
+        - event: ProposalQueued(uint256,uint256)
+          handler: handleProposalQueued
+        - event: ProposalExecuted(uint256)
+          handler: handleProposalExecuted
+        - event: ProposalCanceled(uint256)
+          handler: handleProposalCanceled
+      file: ./src/governor.ts
+
+  - kind: ethereum
+    name: GameGovernanceToken
+    network: arbitrum-sepolia
+    source:
+      address: "{{GAME_GOVERNANCE_TOKEN_ADDRESS}}"
+      abi: GameGovernanceToken
+      startBlock: {{GAME_GOVERNANCE_TOKEN_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - TokenHolder
+      abis:
+        - name: GameGovernanceToken
+          file: ./abis/GameGovernanceToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: DelegateChanged(indexed address,indexed address,indexed address)
+          handler: handleDelegateChanged
+        - event: DelegateVotesChanged(indexed address,uint256,uint256)
+          handler: handleDelegateVotesChanged
+      file: ./src/token.ts
+
+  - kind: ethereum
+    name: LootDrop
+    network: arbitrum-sepolia
+    source:
+      address: "{{LOOT_DROP_ADDRESS}}"
+      abi: LootDrop
+      startBlock: {{LOOT_DROP_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - LootDrop
+      abis:
+        - name: LootDrop
+          file: ./abis/LootDrop.json
+      eventHandlers:
+        - event: LootRequested(indexed uint256,indexed address,uint256)
+          handler: handleLootRequested
+        - event: LootFulfilled(indexed uint256,indexed address,indexed uint256,uint256)
+          handler: handleLootFulfilled
+      file: ./src/loot.ts
+
+  - kind: ethereum
+    name: CraftingSystem
+    network: arbitrum-sepolia
+    source:
+      address: "{{CRAFTING_SYSTEM_ADDRESS}}"
+      abi: CraftingSystem
+      startBlock: {{CRAFTING_SYSTEM_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - CraftingEvent
+      abis:
+        - name: CraftingSystem
+          file: ./abis/CraftingSystem.json
+      eventHandlers:
+        - event: Crafted(indexed address,indexed uint256,uint256,indexed uint256,uint256)
+          handler: handleCrafted
+      file: ./src/crafting.ts
+
+  - kind: ethereum
+    name: GuildTreasuryVault
+    network: arbitrum-sepolia
+    source:
+      address: "{{GUILD_TREASURY_VAULT_ADDRESS}}"
+      abi: GuildTreasuryVaultV1
+      startBlock: {{GUILD_TREASURY_VAULT_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VaultDayData
+      abis:
+        - name: GuildTreasuryVaultV1
+          file: ./abis/GuildTreasuryVaultV1.json
+      eventHandlers:
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+      file: ./src/vault.ts
+
+  - kind: ethereum
+    name: ItemRentalVault
+    network: arbitrum-sepolia
+    source:
+      address: "{{ITEM_RENTAL_VAULT_ADDRESS}}"
+      abi: ItemRentalVault
+      startBlock: {{ITEM_RENTAL_VAULT_START_BLOCK}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - RentalActivity
+      abis:
+        - name: ItemRentalVault
+          file: ./abis/ItemRentalVault.json
+      eventHandlers:
+        - event: ItemListed(indexed uint256,indexed address,indexed uint256,uint256,uint256,uint64)
+          handler: handleItemListed
+        - event: ItemRented(indexed uint256,indexed uint256,indexed address,uint64,uint256,uint256)
+          handler: handleItemRented
+        - event: RentalEnded(indexed uint256,indexed uint256,indexed address)
+          handler: handleRentalEnded
+        - event: ListingCancelled(indexed uint256,indexed address)
+          handler: handleListingCancelled
+      file: ./src/rental.ts
