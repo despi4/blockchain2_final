@@ -1,83 +1,162 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {ICraftingSystem} from "../interfaces/ICraftingSystem.sol";
 import {IGameItems1155} from "../interfaces/IGameItems1155.sol";
-import {IProtocolConfig} from "../interfaces/IProtocolConfig.sol";
-import {DataTypes} from "../libraries/DataTypes.sol";
-import {Errors} from "../libraries/Errors.sol";
-import {RecipeRegistry} from "./RecipeRegistry.sol";
 
-contract CraftingSystem is ICraftingSystem {
-    using SafeERC20 for IERC20;
+/// @title CraftingSystem
+/// @notice Burns required ERC1155 inputs and mints crafted ERC1155 outputs.
+/// @dev This contract must be granted `BURNER_ROLE` and `MINTER_ROLE` on `GameItems`.
+contract CraftingSystem is ICraftingSystem, AccessControl, Pausable, ReentrancyGuard {
+    /// @notice Role allowed to manage recipes and pause state.
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
-    IGameItems1155 public immutable items;
-    IProtocolConfig public immutable protocolConfig;
-    RecipeRegistry public immutable recipeRegistry;
+    /// @notice Reference to the game items ERC1155 contract.
+    IGameItems1155 public immutable gameItems;
 
-    mapping(address user => mapping(uint256 recipeId => uint256 lastCraftAt)) public lastCraftAt;
-
-    event Crafted(address indexed user, uint256 indexed recipeId, uint256 amount, address indexed recipient);
-
-    constructor(IGameItems1155 items_, IProtocolConfig protocolConfig_, RecipeRegistry recipeRegistry_) {
-        items = items_;
-        protocolConfig = protocolConfig_;
-        recipeRegistry = recipeRegistry_;
+    /// @notice Crafting recipe definition.
+    struct Recipe {
+        uint256[] inputItemIds;
+        uint256[] inputAmounts;
+        uint256 outputItemId;
+        uint256 outputAmount;
+        bool active;
     }
 
-    function craft(uint256 recipeId, uint256 amount, address to) external override {
-        if (!protocolConfig.craftingEnabled(recipeId)) revert Errors.Disabled();
+    /// @notice Reverts when a recipe is not active.
+    error RecipeInactive(uint256 recipeId);
 
-        (DataTypes.RecipeInput[] memory inputs, DataTypes.RecipeOutput[] memory outputs, uint64 cooldown, bool enabled) =
-            recipeRegistry.getRecipe(recipeId);
-        if (!enabled) revert Errors.Disabled();
-        if (cooldown != 0 && block.timestamp < lastCraftAt[msg.sender][recipeId] + cooldown) revert Errors.InvalidConfiguration();
+    /// @notice Reverts when a recipe configuration is invalid.
+    error InvalidRecipe();
 
-        for (uint256 i = 0; i < inputs.length; ++i) {
-            uint256 scaledAmount = inputs[i].amount * amount;
-            if (inputs[i].isERC1155) {
-                items.burn(msg.sender, inputs[i].id, scaledAmount);
-            } else {
-                IERC20(inputs[i].asset).safeTransferFrom(msg.sender, address(this), scaledAmount);
-            }
-        }
+    /// @notice Reverts when crafting amount is zero.
+    error ZeroCraftAmount();
 
-        for (uint256 i = 0; i < outputs.length; ++i) {
-            items.mint(to, outputs[i].itemId, outputs[i].amount * amount, "");
-        }
+    /// @notice Reverts when input arrays have mismatched lengths.
+    error InvalidInputLengths();
 
-        lastCraftAt[msg.sender][recipeId] = block.timestamp;
-        emit Crafted(msg.sender, recipeId, amount, to);
+    mapping(uint256 recipeId => Recipe recipe) private _recipes;
+
+    /// @notice Emitted when a recipe is created or updated.
+    event RecipeSet(
+        uint256 indexed recipeId,
+        uint256[] inputItemIds,
+        uint256[] inputAmounts,
+        uint256 outputItemId,
+        uint256 outputAmount,
+        bool active
+    );
+
+    /// @notice Emitted when a recipe is disabled.
+    event RecipeDisabled(uint256 indexed recipeId);
+
+    /// @notice Emitted when a player crafts items.
+    event Crafted(
+        address indexed user,
+        uint256 indexed recipeId,
+        uint256 amount,
+        uint256 indexed outputItemId,
+        uint256 outputAmount
+    );
+
+    /// @param admin Address that receives admin and manager roles.
+    /// @param gameItems_ ERC1155 items contract used for input burns and output mints.
+    constructor(address admin, IGameItems1155 gameItems_) {
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(MANAGER_ROLE, admin);
+        gameItems = gameItems_;
     }
 
-    function previewCraft(uint256 recipeId, uint256 amount)
+    /// @notice Creates or updates a crafting recipe.
+    /// @param recipeId Unique recipe identifier.
+    /// @param inputItemIds Array of required input item ids.
+    /// @param inputAmounts Array of required input amounts.
+    /// @param outputItemId Crafted output item id.
+    /// @param outputAmount Crafted output amount per craft.
+    /// @param active Whether the recipe should be immediately craftable.
+    function setRecipe(
+        uint256 recipeId,
+        uint256[] calldata inputItemIds,
+        uint256[] calldata inputAmounts,
+        uint256 outputItemId,
+        uint256 outputAmount,
+        bool active
+    ) external onlyRole(MANAGER_ROLE) {
+        if (inputItemIds.length == 0 || inputItemIds.length != inputAmounts.length) revert InvalidInputLengths();
+        if (outputItemId == 0 || outputAmount == 0) revert InvalidRecipe();
+
+        for (uint256 i = 0; i < inputAmounts.length; ++i) {
+            if (inputItemIds[i] == 0 || inputAmounts[i] == 0) revert InvalidRecipe();
+        }
+
+        Recipe storage recipe = _recipes[recipeId];
+        recipe.inputItemIds = inputItemIds;
+        recipe.inputAmounts = inputAmounts;
+        recipe.outputItemId = outputItemId;
+        recipe.outputAmount = outputAmount;
+        recipe.active = active;
+
+        emit RecipeSet(recipeId, inputItemIds, inputAmounts, outputItemId, outputAmount, active);
+    }
+
+    /// @notice Disables an existing recipe.
+    /// @param recipeId Recipe identifier to disable.
+    function disableRecipe(uint256 recipeId) external onlyRole(MANAGER_ROLE) {
+        Recipe storage recipe = _recipes[recipeId];
+        if (recipe.outputAmount == 0) revert InvalidRecipe();
+        recipe.active = false;
+        emit RecipeDisabled(recipeId);
+    }
+
+    /// @notice Burns recipe inputs from the caller and mints crafted outputs to the caller.
+    /// @param recipeId Recipe identifier to execute.
+    /// @param amount Number of times to execute the recipe.
+    function craft(uint256 recipeId, uint256 amount) external override whenNotPaused nonReentrant {
+        if (amount == 0) revert ZeroCraftAmount();
+
+        Recipe storage recipe = _recipes[recipeId];
+        if (!recipe.active) revert RecipeInactive(recipeId);
+
+        uint256[] memory scaledInputAmounts = new uint256[](recipe.inputAmounts.length);
+        for (uint256 i = 0; i < recipe.inputAmounts.length; ++i) {
+            scaledInputAmounts[i] = recipe.inputAmounts[i] * amount;
+        }
+
+        gameItems.burnBatch(msg.sender, recipe.inputItemIds, scaledInputAmounts);
+
+        uint256 mintedAmount = recipe.outputAmount * amount;
+        gameItems.mint(msg.sender, recipe.outputItemId, mintedAmount, "");
+
+        emit Crafted(msg.sender, recipeId, amount, recipe.outputItemId, mintedAmount);
+    }
+
+    /// @notice Returns recipe configuration.
+    /// @param recipeId Recipe identifier to query.
+    function getRecipe(uint256 recipeId)
         external
         view
-        override
         returns (
-            uint256[] memory itemIds,
-            uint256[] memory itemAmounts,
-            address[] memory resourceTokens,
-            uint256[] memory resourceAmounts
+            uint256[] memory inputItemIds,
+            uint256[] memory inputAmounts,
+            uint256 outputItemId,
+            uint256 outputAmount,
+            bool active
         )
     {
-        (DataTypes.RecipeInput[] memory inputs, DataTypes.RecipeOutput[] memory outputs,,) = recipeRegistry.getRecipe(recipeId);
+        Recipe storage recipe = _recipes[recipeId];
+        return (recipe.inputItemIds, recipe.inputAmounts, recipe.outputItemId, recipe.outputAmount, recipe.active);
+    }
 
-        itemIds = new uint256[](outputs.length);
-        itemAmounts = new uint256[](outputs.length);
-        resourceTokens = new address[](inputs.length);
-        resourceAmounts = new uint256[](inputs.length);
+    /// @notice Pauses crafting.
+    function pause() external onlyRole(MANAGER_ROLE) {
+        _pause();
+    }
 
-        for (uint256 i = 0; i < outputs.length; ++i) {
-            itemIds[i] = outputs[i].itemId;
-            itemAmounts[i] = outputs[i].amount * amount;
-        }
-
-        for (uint256 i = 0; i < inputs.length; ++i) {
-            resourceTokens[i] = inputs[i].asset;
-            resourceAmounts[i] = inputs[i].amount * amount;
-        }
+    /// @notice Unpauses crafting.
+    function unpause() external onlyRole(MANAGER_ROLE) {
+        _unpause();
     }
 }
