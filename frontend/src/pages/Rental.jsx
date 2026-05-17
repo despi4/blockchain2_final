@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import {
   ADDRESSES,
   ERC20_ABI,
@@ -11,7 +17,13 @@ import {
 } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
 import { parseContractError } from "../hooks/useToast";
-import { basisPointsToPercent, formatToken, parseTokenInput, shortAddress, timestampToLocal } from "../utils/format";
+import {
+  basisPointsToPercent,
+  formatToken,
+  parseTokenInput,
+  shortAddress,
+  timestampToLocal,
+} from "../utils/format";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
 const LISTING_STATUS = ["None", "Listed", "Rented", "Returned", "Cancelled"];
@@ -211,9 +223,27 @@ export default function Rental({ toast }) {
                   </option>
                 ))}
               </select>
-              <input type="number" min="1" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Amount" />
-              <input type="number" min="0" value={pricePerDay} onChange={(event) => setPricePerDay(event.target.value)} placeholder="Price per day in GOLD" />
-              <input type="number" min="1" value={maxDuration} onChange={(event) => setMaxDuration(event.target.value)} placeholder="Max duration in days" />
+              <input
+                type="number"
+                min="1"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder="Amount"
+              />
+              <input
+                type="number"
+                min="0"
+                value={pricePerDay}
+                onChange={(event) => setPricePerDay(event.target.value)}
+                placeholder="Price per day in GOLD"
+              />
+              <input
+                type="number"
+                min="1"
+                value={maxDuration}
+                onChange={(event) => setMaxDuration(event.target.value)}
+                placeholder="Max duration in days"
+              />
             </div>
 
             <button
@@ -224,7 +254,12 @@ export default function Rental({ toast }) {
                   address: ADDRESSES.RENTAL_VAULT,
                   abi: RENTAL_VAULT_ABI,
                   functionName: "listItemForRent",
-                  args: [BigInt(itemId), parseTokenInput(amount, 0), parseTokenInput(pricePerDay), Number(maxDuration)],
+                  args: [
+                    BigInt(itemId),
+                    parseTokenInput(amount, 0),
+                    parseTokenInput(pricePerDay),
+                    Number(maxDuration),
+                  ],
                 })
               }
             >
@@ -241,15 +276,38 @@ export default function Rental({ toast }) {
         ) : (
           <>
             <div className="grid-2" style={{ marginBottom: "0.75rem" }}>
-              <input type="number" min="1" value={rentListingId} onChange={(event) => setRentListingId(event.target.value)} placeholder="Listing ID" />
-              <input type="number" min="1" value={rentDuration} onChange={(event) => setRentDuration(event.target.value)} placeholder="Duration in days" />
+              <input
+                type="number"
+                min="1"
+                value={rentListingId}
+                onChange={(event) => setRentListingId(event.target.value)}
+                placeholder="Listing ID"
+              />
+              <input
+                type="number"
+                min="1"
+                value={rentDuration}
+                onChange={(event) => setRentDuration(event.target.value)}
+                placeholder="Duration in days"
+              />
             </div>
             <div className="stat-row" style={{ marginBottom: "0.75rem" }}>
               <span className="label">Estimated rent cost</span>
               <span className="value">{formatToken(rentCost)} GOLD</span>
             </div>
             {needsGoldApproval && (
-              <button className="btn-secondary" onClick={() => writeContract({ address: ADDRESSES.GOLD_TOKEN, abi: ERC20_ABI, functionName: "approve", args: [ADDRESSES.RENTAL_VAULT, MAX_UINT256] })} style={{ marginRight: "0.75rem" }}>
+              <button
+                className="btn-secondary"
+                onClick={() =>
+                  writeContract({
+                    address: ADDRESSES.GOLD_TOKEN,
+                    abi: ERC20_ABI,
+                    functionName: "approve",
+                    args: [ADDRESSES.RENTAL_VAULT, MAX_UINT256],
+                  })
+                }
+                style={{ marginRight: "0.75rem" }}
+              >
                 Approve GOLD
               </button>
             )}
@@ -274,7 +332,14 @@ export default function Rental({ toast }) {
       <div className="grid-2 section-gap">
         <div className="card">
           <div className="card-title">End rental</div>
-          <input type="number" min="1" value={endRentalId} onChange={(event) => setEndRentalId(event.target.value)} placeholder="Rental ID" style={{ marginBottom: "0.75rem" }} />
+          <input
+            type="number"
+            min="1"
+            value={endRentalId}
+            onChange={(event) => setEndRentalId(event.target.value)}
+            placeholder="Rental ID"
+            style={{ marginBottom: "0.75rem" }}
+          />
           <button
             className="btn-primary"
             disabled={isPending || confirming}
@@ -293,7 +358,14 @@ export default function Rental({ toast }) {
 
         <div className="card">
           <div className="card-title">Cancel listing / claim</div>
-          <input type="number" min="1" value={cancelListingId} onChange={(event) => setCancelListingId(event.target.value)} placeholder="Listing ID" style={{ marginBottom: "0.75rem" }} />
+          <input
+            type="number"
+            min="1"
+            value={cancelListingId}
+            onChange={(event) => setCancelListingId(event.target.value)}
+            placeholder="Listing ID"
+            style={{ marginBottom: "0.75rem" }}
+          />
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
             <button
               className="btn-secondary"

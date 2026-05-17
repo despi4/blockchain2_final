@@ -64,7 +64,13 @@ export default function SubgraphPage() {
 
       <ConfigNotice
         title="Subgraph configuration"
-        lines={failed ? ["Set VITE_SUBGRAPH_URL to a deployed Graph endpoint and ensure the subgraph is live."] : []}
+        lines={
+          failed
+            ? [
+                "Set VITE_SUBGRAPH_URL to a deployed Graph endpoint and ensure the subgraph is live.",
+              ]
+            : []
+        }
       />
 
       <Section title="Recent swaps">

@@ -94,9 +94,7 @@ function ProposalCard({ proposalId, address, toast }) {
           <span className="mono text-sm text-muted">#{proposalId}</span>
           {state !== undefined && <StateBadge state={state} />}
         </div>
-        <span className="text-sm text-muted">
-          Deadline block: {deadline?.toString() || "--"}
-        </span>
+        <span className="text-sm text-muted">Deadline block: {deadline?.toString() || "--"}</span>
       </div>
 
       {votes && (
@@ -118,12 +116,20 @@ function ProposalCard({ proposalId, address, toast }) {
 
       {state === 1 && (
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
-          <select value={support} onChange={(event) => setSupport(Number(event.target.value))} style={{ maxWidth: "180px" }}>
+          <select
+            value={support}
+            onChange={(event) => setSupport(Number(event.target.value))}
+            style={{ maxWidth: "180px" }}
+          >
             <option value={1}>For</option>
             <option value={0}>Against</option>
             <option value={2}>Abstain</option>
           </select>
-          <button className="btn-primary" disabled={!address || hasVoted || isPending || confirming} onClick={handleVote}>
+          <button
+            className="btn-primary"
+            disabled={!address || hasVoted || isPending || confirming}
+            onClick={handleVote}
+          >
             {isPending || confirming ? "Voting..." : hasVoted ? "Already voted" : "Cast vote"}
           </button>
         </div>
@@ -212,7 +218,9 @@ export default function Governance({ toast }) {
         <div className="grid-2">
           <div>
             <div className="card-title">Your voting power</div>
-            <div className="card-value">{address ? formatToken(votingPower) : "Connect wallet"}</div>
+            <div className="card-value">
+              {address ? formatToken(votingPower) : "Connect wallet"}
+            </div>
           </div>
           <div>
             <div className="card-title">Governor parameters</div>
@@ -234,7 +242,9 @@ export default function Governance({ toast }) {
 
         {subgraphError && (
           <div className="card" style={{ marginBottom: "1rem" }}>
-            <p className="text-sm text-muted">Subgraph unavailable. Use manual proposal lookup below.</p>
+            <p className="text-sm text-muted">
+              Subgraph unavailable. Use manual proposal lookup below.
+            </p>
           </div>
         )}
 
@@ -243,7 +253,10 @@ export default function Governance({ toast }) {
         {!subgraphError &&
           proposals?.map((proposal) => (
             <div key={proposal.id}>
-              <div className="text-sm text-muted" style={{ marginBottom: "0.35rem", paddingLeft: "0.25rem" }}>
+              <div
+                className="text-sm text-muted"
+                style={{ marginBottom: "0.35rem", paddingLeft: "0.25rem" }}
+              >
                 {proposal.description || "No description"}
               </div>
               <ProposalCard proposalId={proposal.proposalId} address={address} toast={toast} />
@@ -268,7 +281,9 @@ export default function Governance({ toast }) {
         </div>
 
         {manualIds.length === 0 && (
-          <p className="text-sm text-muted">Enter a proposal ID to inspect and vote on it directly from chain state.</p>
+          <p className="text-sm text-muted">
+            Enter a proposal ID to inspect and vote on it directly from chain state.
+          </p>
         )}
 
         {manualIds.map((proposalId) => (

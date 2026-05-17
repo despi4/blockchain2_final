@@ -5,7 +5,10 @@ function envAddress(name, fallback = ZERO_ADDRESS) {
 }
 
 export const ADDRESSES = {
-  GOVERNANCE_TOKEN: envAddress("VITE_GOVERNANCE_TOKEN_ADDRESS", "0x0000000000000000000000000000000000000001"),
+  GOVERNANCE_TOKEN: envAddress(
+    "VITE_GOVERNANCE_TOKEN_ADDRESS",
+    "0x0000000000000000000000000000000000000001"
+  ),
   GOLD_TOKEN: envAddress("VITE_GOLD_TOKEN_ADDRESS", "0x0000000000000000000000000000000000000002"),
   AMM: envAddress("VITE_AMM_ADDRESS", "0x0000000000000000000000000000000000000003"),
   VAULT: envAddress("VITE_VAULT_ADDRESS", "0x0000000000000000000000000000000000000004"),
@@ -14,7 +17,10 @@ export const ADDRESSES = {
   GAME_ITEMS: envAddress("VITE_GAME_ITEMS_ADDRESS", "0x0000000000000000000000000000000000000007"),
   LOOT: envAddress("VITE_LOOT_ADDRESS", "0x0000000000000000000000000000000000000008"),
   CRAFTING: envAddress("VITE_CRAFTING_ADDRESS", "0x0000000000000000000000000000000000000009"),
-  RENTAL_VAULT: envAddress("VITE_RENTAL_VAULT_ADDRESS", "0x0000000000000000000000000000000000000010"),
+  RENTAL_VAULT: envAddress(
+    "VITE_RENTAL_VAULT_ADDRESS",
+    "0x0000000000000000000000000000000000000010"
+  ),
 };
 
 export function isConfiguredAddress(address) {
@@ -62,10 +68,7 @@ export const AMM_ABI = [
   "event Swap(address indexed sender, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, address to)",
 ];
 
-export const LP_TOKEN_ABI = [
-  ...ERC20_ABI,
-  "function totalSupply() view returns (uint256)",
-];
+export const LP_TOKEN_ABI = [...ERC20_ABI, "function totalSupply() view returns (uint256)"];
 
 export const VAULT_ABI = [
   "function asset() view returns (address)",

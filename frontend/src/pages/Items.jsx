@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import {
   ADDRESSES,
   CRAFTING_ABI,
@@ -83,7 +89,8 @@ export default function Items({ toast }) {
         })
         .filter((recipe) => recipe && recipe.active && recipe.outputItemId !== 0);
 
-  const selectedRecipe = activeRecipes.find((recipe) => recipe.recipeId === selectedRecipeId) || activeRecipes[0];
+  const selectedRecipe =
+    activeRecipes.find((recipe) => recipe.recipeId === selectedRecipeId) || activeRecipes[0];
 
   useEffect(() => {
     if (selectedRecipe && selectedRecipe.recipeId !== selectedRecipeId) {
@@ -146,7 +153,9 @@ export default function Items({ toast }) {
 
       <div className="card section-gap">
         <div className="card-title">Inventory</div>
-        {!isConnected && <p className="text-sm text-muted">Connect wallet to load ERC1155 balances.</p>}
+        {!isConnected && (
+          <p className="text-sm text-muted">Connect wallet to load ERC1155 balances.</p>
+        )}
         {isConnected && (
           <div
             style={{
@@ -173,7 +182,9 @@ export default function Items({ toast }) {
 
         {activeRecipes.length > 0 && (
           <>
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+            <div
+              style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1rem" }}
+            >
               <select
                 value={selectedRecipeId}
                 onChange={(event) => setSelectedRecipeId(Number(event.target.value))}
@@ -210,7 +221,8 @@ export default function Items({ toast }) {
                 <div className="stat-row">
                   <span className="label">Output</span>
                   <span className="value">
-                    {itemLabel(selectedRecipe.outputItemId)} x{selectedRecipe.outputAmount.toString()}
+                    {itemLabel(selectedRecipe.outputItemId)} x
+                    {selectedRecipe.outputAmount.toString()}
                   </span>
                 </div>
                 {selectedRecipe.inputIds.map((itemId, index) => (

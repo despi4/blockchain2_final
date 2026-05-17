@@ -101,7 +101,9 @@ export default function Loot({ toast }) {
           </div>
           <div className="stat-row">
             <span className="label">Your GOLD</span>
-            <span className="value">{isConnected ? formatToken(goldBalance) : "Connect wallet"}</span>
+            <span className="value">
+              {isConnected ? formatToken(goldBalance) : "Connect wallet"}
+            </span>
           </div>
         </div>
 
@@ -111,7 +113,9 @@ export default function Loot({ toast }) {
           {dropRates &&
             dropRates[0].map((itemId, index) => (
               <div key={`${itemId}-${index}`} className="stat-row">
-                <span className="label">{ITEM_METADATA[Number(itemId)]?.name || `Item ${itemId}`}</span>
+                <span className="label">
+                  {ITEM_METADATA[Number(itemId)]?.name || `Item ${itemId}`}
+                </span>
                 <span className="value">{basisPointsToPercent(dropRates[1][index])}</span>
               </div>
             ))}
@@ -125,7 +129,8 @@ export default function Loot({ toast }) {
         ) : (
           <>
             <p className="text-sm text-muted" style={{ marginBottom: "0.75rem" }}>
-              The contract charges GOLD, requests randomness from the configured coordinator, and mints ERC1155 rewards after fulfillment.
+              The contract charges GOLD, requests randomness from the configured coordinator, and
+              mints ERC1155 rewards after fulfillment.
             </p>
             {needsApproval && (
               <button
@@ -168,7 +173,9 @@ export default function Loot({ toast }) {
           <span className="text-sm text-muted">via The Graph</span>
         </div>
         {historyError && (
-          <p className="text-sm text-muted">Subgraph unavailable. Set VITE_SUBGRAPH_URL to view indexed loot.</p>
+          <p className="text-sm text-muted">
+            Subgraph unavailable. Set VITE_SUBGRAPH_URL to view indexed loot.
+          </p>
         )}
         {!historyError && lootHistory === null && <span className="spinner" />}
         {!historyError && lootHistory?.length === 0 && (
@@ -192,7 +199,8 @@ export default function Loot({ toast }) {
                   <td className="mono">{entry.requestId}</td>
                   <td className="mono">
                     {entry.itemGranted
-                      ? ITEM_METADATA[Number(entry.itemGranted)]?.name || `Item ${entry.itemGranted}`
+                      ? ITEM_METADATA[Number(entry.itemGranted)]?.name ||
+                        `Item ${entry.itemGranted}`
                       : "--"}
                   </td>
                   <td>{entry.fulfilled ? "Fulfilled" : "Pending"}</td>

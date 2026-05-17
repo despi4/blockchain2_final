@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import {
-  ADDRESSES,
-  ERC20_ABI,
-  VAULT_ABI,
-  isConfiguredAddress,
-} from "../config/contracts";
+import { ADDRESSES, ERC20_ABI, VAULT_ABI, isConfiguredAddress } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
 import { parseContractError } from "../hooks/useToast";
 import { formatToken, parseTokenInput, shortAddress } from "../utils/format";
@@ -167,15 +162,21 @@ export default function Vault({ toast }) {
           <div className="card-title">Your position</div>
           <div className="stat-row">
             <span className="label">{assetSymbol || "Asset"} balance</span>
-            <span className="value">{isConnected ? formatToken(assetBalance) : "Connect wallet"}</span>
+            <span className="value">
+              {isConnected ? formatToken(assetBalance) : "Connect wallet"}
+            </span>
           </div>
           <div className="stat-row">
             <span className="label">Vault shares</span>
-            <span className="value">{isConnected ? formatToken(shareBalance) : "Connect wallet"}</span>
+            <span className="value">
+              {isConnected ? formatToken(shareBalance) : "Connect wallet"}
+            </span>
           </div>
           <div className="stat-row">
             <span className="label">Max withdraw</span>
-            <span className="value">{isConnected ? formatToken(maxWithdraw) : "Connect wallet"}</span>
+            <span className="value">
+              {isConnected ? formatToken(maxWithdraw) : "Connect wallet"}
+            </span>
           </div>
         </div>
       </div>

@@ -113,9 +113,10 @@ export default function Home({ toast }) {
     error: delegateError,
   } = useWriteContract();
 
-  const { isLoading: delegateConfirming, isSuccess: delegateSuccess } = useWaitForTransactionReceipt({
-    hash: delegateHash,
-  });
+  const { isLoading: delegateConfirming, isSuccess: delegateSuccess } =
+    useWaitForTransactionReceipt({
+      hash: delegateHash,
+    });
 
   useEffect(() => {
     if (delegateSuccess) toast?.success("Delegation confirmed.");
@@ -159,10 +160,7 @@ export default function Home({ toast }) {
     <div className="page">
       <h1 className="page-title">Balance Dashboard</h1>
 
-      <ConfigNotice
-        title="Frontend contract config"
-        lines={missingConfig}
-      />
+      <ConfigNotice title="Frontend contract config" lines={missingConfig} />
 
       <div className="grid-3 section-gap">
         <StatCard
@@ -181,9 +179,15 @@ export default function Home({ toast }) {
       </div>
 
       <div className="grid-3 section-gap">
-        <StatCard label="Vault Shares" value={isConnected ? formatToken(vaultShares) : "Connect wallet"} />
+        <StatCard
+          label="Vault Shares"
+          value={isConnected ? formatToken(vaultShares) : "Connect wallet"}
+        />
         <StatCard label="Vault Assets" value={formatToken(vaultAssets)} />
-        <StatCard label="LP Balance" value={isConnected ? formatToken(lpBalance) : "Connect wallet"} />
+        <StatCard
+          label="LP Balance"
+          value={isConnected ? formatToken(lpBalance) : "Connect wallet"}
+        />
       </div>
 
       <div className="card section-gap">

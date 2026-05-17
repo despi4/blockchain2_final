@@ -135,16 +135,17 @@ export default function Marketplace({ toast }) {
     address: ADDRESSES.AMM,
     abi: AMM_ABI,
     functionName: "getAmountOut",
-    args: reserveIn !== undefined && reserveOut !== undefined ? [swapAmountWei, reserveIn, reserveOut] : [0n, 1n, 1n],
-    query: { enabled: configured && swapAmountWei > 0n && reserveIn !== undefined && reserveOut !== undefined },
+    args:
+      reserveIn !== undefined && reserveOut !== undefined
+        ? [swapAmountWei, reserveIn, reserveOut]
+        : [0n, 1n, 1n],
+    query: {
+      enabled:
+        configured && swapAmountWei > 0n && reserveIn !== undefined && reserveOut !== undefined,
+    },
   });
 
-  const {
-    writeContract,
-    data: txHash,
-    isPending,
-    error,
-  } = useWriteContract();
+  const { writeContract, data: txHash, isPending, error } = useWriteContract();
 
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
@@ -159,8 +160,10 @@ export default function Marketplace({ toast }) {
     if (error) toast?.error(parseContractError(error));
   }, [error, toast]);
 
-  const needsToken0Approval = swapAmountWei > 0n && swapDirection === "0to1" && (token0Allowance || 0n) < swapAmountWei;
-  const needsToken1Approval = swapAmountWei > 0n && swapDirection === "1to0" && (token1Allowance || 0n) < swapAmountWei;
+  const needsToken0Approval =
+    swapAmountWei > 0n && swapDirection === "0to1" && (token0Allowance || 0n) < swapAmountWei;
+  const needsToken1Approval =
+    swapAmountWei > 0n && swapDirection === "1to0" && (token1Allowance || 0n) < swapAmountWei;
   const needsLiquidity0Approval = liquidity0Wei > 0n && (token0Allowance || 0n) < liquidity0Wei;
   const needsLiquidity1Approval = liquidity1Wei > 0n && (token1Allowance || 0n) < liquidity1Wei;
 
@@ -183,7 +186,8 @@ export default function Marketplace({ toast }) {
     writeContract({
       address: ADDRESSES.AMM,
       abi: AMM_ABI,
-      functionName: swapDirection === "0to1" ? "swapExactToken0ForToken1" : "swapExactToken1ForToken0",
+      functionName:
+        swapDirection === "0to1" ? "swapExactToken0ForToken1" : "swapExactToken1ForToken0",
       args: [swapAmountWei, minAmountOut, address],
     });
   };
@@ -285,10 +289,20 @@ export default function Marketplace({ toast }) {
           <p className="text-sm text-muted">Connect wallet to swap.</p>
         ) : (
           <>
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
-              <select value={swapDirection} onChange={(event) => setSwapDirection(event.target.value)} style={{ maxWidth: "220px" }}>
-                <option value="0to1">{token0Symbol || "Token 0"} to {token1Symbol || "Token 1"}</option>
-                <option value="1to0">{token1Symbol || "Token 1"} to {token0Symbol || "Token 0"}</option>
+            <div
+              style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", flexWrap: "wrap" }}
+            >
+              <select
+                value={swapDirection}
+                onChange={(event) => setSwapDirection(event.target.value)}
+                style={{ maxWidth: "220px" }}
+              >
+                <option value="0to1">
+                  {token0Symbol || "Token 0"} to {token1Symbol || "Token 1"}
+                </option>
+                <option value="1to0">
+                  {token1Symbol || "Token 1"} to {token0Symbol || "Token 0"}
+                </option>
               </select>
               <input
                 type="number"
@@ -306,16 +320,26 @@ export default function Marketplace({ toast }) {
             </div>
             <div className="stat-row" style={{ marginBottom: "0.75rem" }}>
               <span className="label">Minimum out (5% slippage)</span>
-              <span className="value">{quotedAmountOut ? formatToken((quotedAmountOut * 95n) / 100n) : "--"}</span>
+              <span className="value">
+                {quotedAmountOut ? formatToken((quotedAmountOut * 95n) / 100n) : "--"}
+              </span>
             </div>
 
             {needsToken0Approval && (
-              <button className="btn-secondary" onClick={() => approveToken(token0Address)} style={{ marginRight: "0.75rem" }}>
+              <button
+                className="btn-secondary"
+                onClick={() => approveToken(token0Address)}
+                style={{ marginRight: "0.75rem" }}
+              >
                 Approve {token0Symbol || "Token 0"}
               </button>
             )}
             {needsToken1Approval && (
-              <button className="btn-secondary" onClick={() => approveToken(token1Address)} style={{ marginRight: "0.75rem" }}>
+              <button
+                className="btn-secondary"
+                onClick={() => approveToken(token1Address)}
+                style={{ marginRight: "0.75rem" }}
+              >
                 Approve {token1Symbol || "Token 1"}
               </button>
             )}
@@ -332,7 +356,9 @@ export default function Marketplace({ toast }) {
           <p className="text-sm text-muted">Connect wallet to add liquidity.</p>
         ) : (
           <>
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
+            <div
+              style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem", flexWrap: "wrap" }}
+            >
               <input
                 type="number"
                 min="0"
@@ -350,17 +376,29 @@ export default function Marketplace({ toast }) {
             </div>
 
             {needsLiquidity0Approval && (
-              <button className="btn-secondary" onClick={() => approveToken(token0Address)} style={{ marginRight: "0.75rem" }}>
+              <button
+                className="btn-secondary"
+                onClick={() => approveToken(token0Address)}
+                style={{ marginRight: "0.75rem" }}
+              >
                 Approve {token0Symbol || "Token 0"}
               </button>
             )}
             {needsLiquidity1Approval && (
-              <button className="btn-secondary" onClick={() => approveToken(token1Address)} style={{ marginRight: "0.75rem" }}>
+              <button
+                className="btn-secondary"
+                onClick={() => approveToken(token1Address)}
+                style={{ marginRight: "0.75rem" }}
+              >
                 Approve {token1Symbol || "Token 1"}
               </button>
             )}
 
-            <button className="btn-primary" disabled={isPending || confirming} onClick={handleAddLiquidity}>
+            <button
+              className="btn-primary"
+              disabled={isPending || confirming}
+              onClick={handleAddLiquidity}
+            >
               {isPending || confirming ? "Submitting..." : "Add Liquidity"}
             </button>
           </>
@@ -381,7 +419,11 @@ export default function Marketplace({ toast }) {
               style={{ maxWidth: "240px", marginBottom: "0.75rem" }}
             />
             <div>
-              <button className="btn-primary" disabled={isPending || confirming} onClick={handleRemoveLiquidity}>
+              <button
+                className="btn-primary"
+                disabled={isPending || confirming}
+                onClick={handleRemoveLiquidity}
+              >
                 {isPending || confirming ? "Submitting..." : "Remove Liquidity"}
               </button>
             </div>
