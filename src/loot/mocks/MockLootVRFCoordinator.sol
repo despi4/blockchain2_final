@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {IRandomnessProvider} from "../interfaces/IRandomnessProvider.sol";
-import {VRFAdapter} from "./VRFAdapter.sol";
+import {IRandomnessProvider} from "../../interfaces/IRandomnessProvider.sol";
+import {LootDrop} from "../LootDrop.sol";
 
-contract MockVRFCoordinator is IRandomnessProvider {
+/// @title MockLootVRFCoordinator
+/// @notice Deterministic mock coordinator for Foundry tests.
+contract MockLootVRFCoordinator is IRandomnessProvider {
     uint256 public nextRequestId;
     mapping(uint256 requestId => address requester) public requesters;
 
@@ -17,8 +19,8 @@ contract MockVRFCoordinator is IRandomnessProvider {
         address requester = requesters[requestId];
         require(requester != address(0), "UNKNOWN_REQUEST");
 
-        uint256[] memory words = new uint256[](1);
-        words[0] = randomness;
-        VRFAdapter(requester).rawFulfillRandomWords(requestId, words);
+        uint256[] memory randomWords = new uint256[](1);
+        randomWords[0] = randomness;
+        LootDrop(requester).fulfillRandomWords(requestId, randomWords);
     }
 }
