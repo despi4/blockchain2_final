@@ -9,13 +9,17 @@ function fmt(val, decimals = 18, dp = 4) {
   try {
     const n = parseFloat(formatUnits(val, decimals));
     return n.toLocaleString(undefined, { maximumFractionDigits: dp });
-  } catch { return "—"; }
+  } catch {
+    return "—";
+  }
 }
 
 function Panel({ title, children }) {
   return (
     <div className="card section-gap">
-      <div className="card-title" style={{ marginBottom: "1rem" }}>{title}</div>
+      <div className="card-title" style={{ marginBottom: "1rem" }}>
+        {title}
+      </div>
       {children}
     </div>
   );
@@ -25,7 +29,7 @@ export default function Marketplace({ toast }) {
   const { address, isConnected } = useAccount();
 
   // ── Swap state ─────────────────────────────────────────────────────────────
-  const [swapIn,  setSwapIn]  = useState("");
+  const [swapIn, setSwapIn] = useState("");
   const [swapDir, setSwapDir] = useState(0); // 0 = token0→token1, 1 = token1→token0
 
   // ── Deposit state ──────────────────────────────────────────────────────────
@@ -38,44 +42,48 @@ export default function Marketplace({ toast }) {
   // ── Reads ──────────────────────────────────────────────────────────────────
   const { data: reserves, refetch: refetchReserves } = useReadContract({
     address: ADDRESSES.AMM,
-    abi:     AMM_ABI,
+    abi: AMM_ABI,
     functionName: "getReserves",
   });
 
   const { data: lpSupply } = useReadContract({
     address: ADDRESSES.AMM,
-    abi:     AMM_ABI,
+    abi: AMM_ABI,
     functionName: "totalSupply",
   });
 
   const { data: vaultAssets, refetch: refetchVault } = useReadContract({
     address: ADDRESSES.VAULT,
-    abi:     VAULT_ABI,
+    abi: VAULT_ABI,
     functionName: "totalAssets",
   });
 
   const { data: vaultSupply } = useReadContract({
     address: ADDRESSES.VAULT,
-    abi:     VAULT_ABI,
+    abi: VAULT_ABI,
     functionName: "totalSupply",
   });
 
   const { data: userVaultShares, refetch: refetchShares } = useReadContract({
     address: ADDRESSES.VAULT,
-    abi:     VAULT_ABI,
+    abi: VAULT_ABI,
     functionName: "balanceOf",
-    args:    [address],
-    query:   { enabled: !!address },
+    args: [address],
+    query: { enabled: !!address },
   });
 
   // Expected output for swap
   const swapInBig = (() => {
-    try { return swapIn ? parseUnits(swapIn, 18) : 0n; } catch { return 0n; }
+    try {
+      return swapIn ? parseUnits(swapIn, 18) : 0n;
+    } catch {
+      return 0n;
+    }
   })();
 
   const { data: amountOut } = useReadContract({
     address: ADDRESSES.AMM,
-    abi:     AMM_ABI,
+    abi: AMM_ABI,
     functionName: "getAmountOut",
     args: reserves
       ? swapDir === 0
@@ -93,8 +101,9 @@ export default function Marketplace({ toast }) {
     error: swapError,
   } = useWriteContract();
 
-  const { isLoading: swapConfirming, isSuccess: swapSuccess } =
-    useWaitForTransactionReceipt({ hash: swapHash });
+  const { isLoading: swapConfirming, isSuccess: swapSuccess } = useWaitForTransactionReceipt({
+    hash: swapHash,
+  });
 
   useEffect(() => {
     if (swapSuccess) {
@@ -109,16 +118,20 @@ export default function Marketplace({ toast }) {
   }, [swapError]);
 
   const handleSwap = () => {
-    if (!swapIn || swapInBig === 0n) { toast?.error("Enter an amount"); return; }
-    if (!amountOut) { toast?.error("Unable to calculate output"); return; }
+    if (!swapIn || swapInBig === 0n) {
+      toast?.error("Enter an amount");
+      return;
+    }
+    if (!amountOut) {
+      toast?.error("Unable to calculate output");
+      return;
+    }
     const slippage = (amountOut * 95n) / 100n; // 5% slippage
     writeSwap({
       address: ADDRESSES.AMM,
-      abi:     AMM_ABI,
+      abi: AMM_ABI,
       functionName: "swap",
-      args: swapDir === 0
-        ? [0n, slippage, address, "0x"]
-        : [slippage, 0n, address, "0x"],
+      args: swapDir === 0 ? [0n, slippage, address, "0x"] : [slippage, 0n, address, "0x"],
     });
   };
 
@@ -130,8 +143,9 @@ export default function Marketplace({ toast }) {
     error: depositError,
   } = useWriteContract();
 
-  const { isLoading: depositConfirming, isSuccess: depositSuccess } =
-    useWaitForTransactionReceipt({ hash: depositHash });
+  const { isLoading: depositConfirming, isSuccess: depositSuccess } = useWaitForTransactionReceipt({
+    hash: depositHash,
+  });
 
   useEffect(() => {
     if (depositSuccess) {
@@ -147,13 +161,22 @@ export default function Marketplace({ toast }) {
   }, [depositError]);
 
   const handleDeposit = () => {
-    const amt = (() => { try { return parseUnits(depositAmt, 18); } catch { return 0n; } })();
-    if (!depositAmt || amt === 0n) { toast?.error("Enter an amount"); return; }
+    const amt = (() => {
+      try {
+        return parseUnits(depositAmt, 18);
+      } catch {
+        return 0n;
+      }
+    })();
+    if (!depositAmt || amt === 0n) {
+      toast?.error("Enter an amount");
+      return;
+    }
     writeDeposit({
       address: ADDRESSES.VAULT,
-      abi:     VAULT_ABI,
+      abi: VAULT_ABI,
       functionName: "deposit",
-      args:    [amt, address],
+      args: [amt, address],
     });
   };
 
@@ -165,13 +188,15 @@ export default function Marketplace({ toast }) {
     error: liqError,
   } = useWriteContract();
 
-  const { isLoading: liqConfirming, isSuccess: liqSuccess } =
-    useWaitForTransactionReceipt({ hash: liqHash });
+  const { isLoading: liqConfirming, isSuccess: liqSuccess } = useWaitForTransactionReceipt({
+    hash: liqHash,
+  });
 
   useEffect(() => {
     if (liqSuccess) {
       toast?.success("Liquidity added!");
-      setLiq0(""); setLiq1("");
+      setLiq0("");
+      setLiq1("");
       refetchReserves();
     }
   }, [liqSuccess]);
@@ -181,14 +206,29 @@ export default function Marketplace({ toast }) {
   }, [liqError]);
 
   const handleAddLiquidity = () => {
-    const a0 = (() => { try { return parseUnits(liq0, 18); } catch { return 0n; } })();
-    const a1 = (() => { try { return parseUnits(liq1, 18); } catch { return 0n; } })();
-    if (!liq0 || !liq1 || a0 === 0n || a1 === 0n) { toast?.error("Enter both amounts"); return; }
+    const a0 = (() => {
+      try {
+        return parseUnits(liq0, 18);
+      } catch {
+        return 0n;
+      }
+    })();
+    const a1 = (() => {
+      try {
+        return parseUnits(liq1, 18);
+      } catch {
+        return 0n;
+      }
+    })();
+    if (!liq0 || !liq1 || a0 === 0n || a1 === 0n) {
+      toast?.error("Enter both amounts");
+      return;
+    }
     writeLiquidity({
       address: ADDRESSES.AMM,
-      abi:     AMM_ABI,
+      abi: AMM_ABI,
       functionName: "addLiquidity",
-      args:    [a0, a1, (a0 * 95n) / 100n, (a1 * 95n) / 100n, address],
+      args: [a0, a1, (a0 * 95n) / 100n, (a1 * 95n) / 100n, address],
     });
   };
 
@@ -221,7 +261,9 @@ export default function Marketplace({ toast }) {
             <div className="stat-row">
               <span className="label">Price T0/T1</span>
               <span className="value mono">
-                {(Number(formatUnits(reserves[1], 18)) / Number(formatUnits(reserves[0], 18))).toFixed(4)}
+                {(
+                  Number(formatUnits(reserves[1], 18)) / Number(formatUnits(reserves[0], 18))
+                ).toFixed(4)}
               </span>
             </div>
           )}
@@ -261,7 +303,11 @@ export default function Marketplace({ toast }) {
             <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem" }}>
               <div style={{ flex: 1 }}>
                 <label className="text-sm text-muted">Direction</label>
-                <select value={swapDir} onChange={(e) => setSwapDir(Number(e.target.value))} className="mt-1">
+                <select
+                  value={swapDir}
+                  onChange={(e) => setSwapDir(Number(e.target.value))}
+                  className="mt-1"
+                >
                   <option value={0}>Token 0 → Token 1</option>
                   <option value={1}>Token 1 → Token 0</option>
                 </select>
@@ -299,8 +345,13 @@ export default function Marketplace({ toast }) {
               onClick={handleSwap}
             >
               {swapPending || swapConfirming ? (
-                <><span className="spinner" style={{ width: 14, height: 14 }} /> {swapConfirming ? "Confirming…" : "Waiting…"}</>
-              ) : "Swap"}
+                <>
+                  <span className="spinner" style={{ width: 14, height: 14 }} />{" "}
+                  {swapConfirming ? "Confirming…" : "Waiting…"}
+                </>
+              ) : (
+                "Swap"
+              )}
             </button>
           </>
         )}
@@ -313,7 +364,8 @@ export default function Marketplace({ toast }) {
         ) : (
           <>
             <p className="text-sm text-muted" style={{ marginBottom: "0.75rem" }}>
-              Deposit assets to receive vault shares (vGFI). Shares appreciate as the vault earns yield.
+              Deposit assets to receive vault shares (vGFI). Shares appreciate as the vault earns
+              yield.
             </p>
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <input
@@ -330,8 +382,13 @@ export default function Marketplace({ toast }) {
                 onClick={handleDeposit}
               >
                 {depositPending || depositConfirming ? (
-                  <><span className="spinner" style={{ width: 14, height: 14 }} /> {depositConfirming ? "Confirming…" : "Waiting…"}</>
-                ) : "Deposit"}
+                  <>
+                    <span className="spinner" style={{ width: 14, height: 14 }} />{" "}
+                    {depositConfirming ? "Confirming…" : "Waiting…"}
+                  </>
+                ) : (
+                  "Deposit"
+                )}
               </button>
             </div>
           </>
@@ -346,12 +403,18 @@ export default function Marketplace({ toast }) {
           <>
             <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem" }}>
               <input
-                type="number" min="0" placeholder="Amount Token 0"
-                value={liq0} onChange={(e) => setLiq0(e.target.value)}
+                type="number"
+                min="0"
+                placeholder="Amount Token 0"
+                value={liq0}
+                onChange={(e) => setLiq0(e.target.value)}
               />
               <input
-                type="number" min="0" placeholder="Amount Token 1"
-                value={liq1} onChange={(e) => setLiq1(e.target.value)}
+                type="number"
+                min="0"
+                placeholder="Amount Token 1"
+                value={liq1}
+                onChange={(e) => setLiq1(e.target.value)}
               />
             </div>
             <button
@@ -361,8 +424,13 @@ export default function Marketplace({ toast }) {
               onClick={handleAddLiquidity}
             >
               {liqPending || liqConfirming ? (
-                <><span className="spinner" style={{ width: 14, height: 14 }} /> {liqConfirming ? "Confirming…" : "Waiting…"}</>
-              ) : "Add Liquidity"}
+                <>
+                  <span className="spinner" style={{ width: 14, height: 14 }} />{" "}
+                  {liqConfirming ? "Confirming…" : "Waiting…"}
+                </>
+              ) : (
+                "Add Liquidity"
+              )}
             </button>
           </>
         )}

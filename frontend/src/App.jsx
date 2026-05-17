@@ -16,10 +16,10 @@ function App() {
       <NetworkGuard />
       <Navbar />
       <Routes>
-        <Route path="/"            element={<Home        toast={toast} />} />
-        <Route path="/items"       element={<Items       toast={toast} />} />
+        <Route path="/" element={<Home toast={toast} />} />
+        <Route path="/items" element={<Items toast={toast} />} />
         <Route path="/marketplace" element={<Marketplace toast={toast} />} />
-        <Route path="/governance"  element={<Governance  toast={toast} />} />
+        <Route path="/governance" element={<Governance toast={toast} />} />
       </Routes>
       <ToastContainer toasts={toasts} />
     </BrowserRouter>

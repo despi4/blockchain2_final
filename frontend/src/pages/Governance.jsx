@@ -37,34 +37,57 @@ function fmt(val, decimals = 18, dp = 2) {
     return parseFloat(formatUnits(val, decimals)).toLocaleString(undefined, {
       maximumFractionDigits: dp,
     });
-  } catch { return "—"; }
+  } catch {
+    return "—";
+  }
 }
 
 function ProposalRow({ proposalId, address, toast }) {
   const [support, setSupport] = useState(1); // default: For
   const idBig = BigInt(proposalId);
 
-  const { data: state }  = useReadContract({ address: ADDRESSES.GOVERNOR, abi: GOVERNOR_ABI, functionName: "state",         args: [idBig] });
-  const { data: votes }  = useReadContract({ address: ADDRESSES.GOVERNOR, abi: GOVERNOR_ABI, functionName: "proposalVotes", args: [idBig] });
-  const { data: hasVoted } = useReadContract({
-    address: ADDRESSES.GOVERNOR, abi: GOVERNOR_ABI, functionName: "hasVoted",
-    args:    [idBig, address], query: { enabled: !!address },
+  const { data: state } = useReadContract({
+    address: ADDRESSES.GOVERNOR,
+    abi: GOVERNOR_ABI,
+    functionName: "state",
+    args: [idBig],
   });
-  const { data: deadline } = useReadContract({ address: ADDRESSES.GOVERNOR, abi: GOVERNOR_ABI, functionName: "proposalDeadline", args: [idBig] });
+  const { data: votes } = useReadContract({
+    address: ADDRESSES.GOVERNOR,
+    abi: GOVERNOR_ABI,
+    functionName: "proposalVotes",
+    args: [idBig],
+  });
+  const { data: hasVoted } = useReadContract({
+    address: ADDRESSES.GOVERNOR,
+    abi: GOVERNOR_ABI,
+    functionName: "hasVoted",
+    args: [idBig, address],
+    query: { enabled: !!address },
+  });
+  const { data: deadline } = useReadContract({
+    address: ADDRESSES.GOVERNOR,
+    abi: GOVERNOR_ABI,
+    functionName: "proposalDeadline",
+    args: [idBig],
+  });
 
   const { writeContract, data: voteTxHash, isPending, error: voteError } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: voteTxHash });
 
-  useEffect(() => { if (isSuccess)   toast?.success("Vote cast!"); },        [isSuccess]);
-  useEffect(() => { if (voteError)   toast?.error(parseContractError(voteError)); }, [voteError]);
+  useEffect(() => {
+    if (isSuccess) toast?.success("Vote cast!");
+  }, [isSuccess]);
+  useEffect(() => {
+    if (voteError) toast?.error(parseContractError(voteError));
+  }, [voteError]);
 
-  const isActive  = state === 1;
-  const canVote   = isActive && !hasVoted && !!address;
+  const isActive = state === 1;
+  const canVote = isActive && !hasVoted && !!address;
 
-  const totalVotes =
-    votes ? Number(formatUnits(votes[0] + votes[1] + votes[2], 18)) : 0;
+  const totalVotes = votes ? Number(formatUnits(votes[0] + votes[1] + votes[2], 18)) : 0;
   const forPct =
-    totalVotes > 0 ? (Number(formatUnits(votes?.[1] ?? 0n, 18)) / totalVotes * 100) : 0;
+    totalVotes > 0 ? (Number(formatUnits(votes?.[1] ?? 0n, 18)) / totalVotes) * 100 : 0;
 
   return (
     <div className="card" style={{ marginBottom: "1rem" }}>
@@ -74,23 +97,23 @@ function ProposalRow({ proposalId, address, toast }) {
           {state !== undefined && <StateBadge state={state} />}
         </div>
         {deadline !== undefined && (
-          <span className="text-sm text-muted">
-            Deadline: block {deadline.toString()}
-          </span>
+          <span className="text-sm text-muted">Deadline: block {deadline.toString()}</span>
         )}
       </div>
 
       {/* Vote counts */}
       {votes && (
         <div style={{ marginBottom: "0.75rem" }}>
-          <div style={{
-            display: "flex",
-            height: "6px",
-            borderRadius: "4px",
-            overflow: "hidden",
-            background: "var(--border)",
-            marginBottom: "0.4rem",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              height: "6px",
+              borderRadius: "4px",
+              overflow: "hidden",
+              background: "var(--border)",
+              marginBottom: "0.4rem",
+            }}
+          >
             <div style={{ width: `${forPct}%`, background: "var(--success)" }} />
           </div>
           <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem" }}>
@@ -125,15 +148,19 @@ function ProposalRow({ proposalId, address, toast }) {
                 onClick={() =>
                   writeContract({
                     address: ADDRESSES.GOVERNOR,
-                    abi:     GOVERNOR_ABI,
+                    abi: GOVERNOR_ABI,
                     functionName: "castVote",
-                    args:    [idBig, support],
+                    args: [idBig, support],
                   })
                 }
               >
                 {isPending || confirming ? (
-                  <><span className="spinner" style={{ width: 12, height: 12 }} /> Voting…</>
-                ) : `Vote ${VOTE_SUPPORT[support]}`}
+                  <>
+                    <span className="spinner" style={{ width: 12, height: 12 }} /> Voting…
+                  </>
+                ) : (
+                  `Vote ${VOTE_SUPPORT[support]}`
+                )}
               </button>
             </>
           )}
@@ -146,24 +173,27 @@ function ProposalRow({ proposalId, address, toast }) {
 export default function Governance({ toast }) {
   const { address } = useAccount();
 
-  const [subProposals, setSubProposals]   = useState(null);
+  const [subProposals, setSubProposals] = useState(null);
   const [subgraphError, setSubgraphError] = useState(false);
-  const [manualId, setManualId]           = useState("");
-  const [manualList, setManualList]       = useState([]);
+  const [manualId, setManualId] = useState("");
+  const [manualList, setManualList] = useState([]);
 
   const { data: votingPower } = useReadContract({
     address: ADDRESSES.GOVERNANCE_TOKEN,
-    abi:     GOVERNANCE_TOKEN_ABI,
+    abi: GOVERNANCE_TOKEN_ABI,
     functionName: "getVotes",
-    args:    [address],
-    query:   { enabled: !!address },
+    args: [address],
+    query: { enabled: !!address },
   });
 
   // Pull proposals from subgraph
   useEffect(() => {
     fetchProposals(10)
       .then((d) => setSubProposals(d?.proposals ?? []))
-      .catch(() => { setSubgraphError(true); setSubProposals([]); });
+      .catch(() => {
+        setSubgraphError(true);
+        setSubProposals([]);
+      });
   }, []);
 
   const addManual = () => {
@@ -174,8 +204,8 @@ export default function Governance({ toast }) {
   };
 
   // Merge subgraph IDs + manual IDs, deduplicated
-  const subIds    = subProposals?.map((p) => p.proposalId) ?? [];
-  const allIds    = [...new Set([...manualList, ...subIds])];
+  const subIds = subProposals?.map((p) => p.proposalId) ?? [];
+  const allIds = [...new Set([...manualList, ...subIds])];
 
   return (
     <div className="page">
@@ -251,7 +281,9 @@ export default function Governance({ toast }) {
             onChange={(e) => setManualId(e.target.value)}
             style={{ flex: 1, fontFamily: "monospace" }}
           />
-          <button className="btn-secondary" onClick={addManual}>Add</button>
+          <button className="btn-secondary" onClick={addManual}>
+            Add
+          </button>
         </div>
 
         {manualList.map((id) => (
@@ -264,7 +296,9 @@ export default function Governance({ toast }) {
         ))}
 
         {manualList.length === 0 && (
-          <p className="text-sm text-muted">Enter a proposal ID to load its on-chain state and vote.</p>
+          <p className="text-sm text-muted">
+            Enter a proposal ID to load its on-chain state and vote.
+          </p>
         )}
       </div>
     </div>

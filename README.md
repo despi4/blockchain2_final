@@ -1,180 +1,161 @@
 # GameFi Economy — Blockchain Technologies 2 Final Project
 
-**Option B — GameFi Economy**
-
-A full-stack decentralized protocol featuring an ERC-1155 in-game item economy with crafting, AMM marketplace, NFT rental vault, Chainlink VRF loot drops, and DAO governance — deployed on Arbitrum Sepolia (L2).
+Option B. Two-person project: Person 1 built the core contracts (token, AMM, vault, loot, crafting), Person 2 (this repo) built the DAO governance layer, frontend, subgraph, and deployment tooling.
 
 ---
 
-## Deployed Contracts (Arbitrum Sepolia)
+## What this project is
 
-| Contract | Address | Explorer |
+An on-chain GameFi economy where players trade resources, craft items, and earn loot drops — all governed by token holders through a DAO. The main idea is that game parameters (drop rates, crafting costs, fees) are not hardcoded; they go through a governance vote before any change takes effect.
+
+The governance flow works like this:
+- Anyone holding ≥ 1% of the token supply can submit a proposal
+- Voting is open for ~1 week (50 400 blocks on Arbitrum)
+- If 4% quorum is reached and For > Against, the proposal succeeds
+- It then sits in a 2-day timelock before anyone can execute it
+
+This means even if someone writes a malicious proposal, there's a 2-day window to notice before it runs.
+
+---
+
+## Project structure
+
+```
+blockchain2_final/
+├── src/governance/
+│   ├── GameFiGovernor.sol      # OpenZeppelin Governor with our settings
+│   └── GameFiTimelock.sol      # 2-day timelock, self-governed
+├── test/governance/
+│   └── GovernorTest.t.sol      # 16 tests covering full proposal lifecycle
+├── script/
+│   ├── Deploy.s.sol            # deploys timelock + governor, wires roles
+│   └── PostDeployVerify.s.sol  # sanity checks after deploy
+├── subgraph/                   # The Graph indexing (7 entities)
+├── frontend/                   # React + Wagmi v2 + RainbowKit v2
+└── .github/workflows/ci.yml    # forge + slither + solhint + eslint
+```
+
+Person 1's contracts (token, AMM, vault, loot, crafting) live in a separate repo and are referenced by address.
+
+---
+
+## Governor parameters
+
+| Parameter | Value | Reason |
 |---|---|---|
-| GameFi Token (ERC20Votes) | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| Game Items (ERC-1155) | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| AMM | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| Rental Vault (ERC-4626) | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| Loot Drop (Chainlink VRF) | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| Crafting | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| **GameFiGovernor** | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
-| **GameFiTimelock** | `0x...` | [View](https://sepolia.arbiscan.io/address/0x...) |
+| Voting delay | 7 200 blocks (~1 day) | gives token holders time to notice a proposal |
+| Voting period | 50 400 blocks (~1 week) | enough time for participation |
+| Quorum | 4% of total supply | reasonable threshold on a 1M token supply |
+| Proposal threshold | 1% (10 000 GFI) | filters spam, doesn't block legitimate holders |
+| Timelock delay | 2 days | window to react before execution |
 
-> Fill in after `forge script script/Deploy.s.sol --broadcast`.
+Timelock is self-governed — the deployer gives up admin rights at deploy time. Only the governor can queue proposals.
 
 ---
 
-## Architecture
+## Running the tests
 
-```
-User ──→ Frontend (React + Wagmi + RainbowKit)
-           │
-           ├── Dashboard:   Balance / Voting Power / Delegate / Recent Swaps
-           ├── Items:        ERC-1155 Inventory / Crafting / VRF Loot Drop
-           ├── Marketplace:  AMM Swap / Add Liquidity / ERC-4626 Vault Deposit
-           └── Governance:   Propose / Vote / Queue / Execute
-                                │
-                         GameFiGovernor (OZ Governor)
-                                │
-                      GameFiTimelock (2-day delay)
-                                │
-                    ┌───────────┴─────────────┐
-               Protocol Contracts          Treasury
-             (AMM, Vault, Crafting,        (GFI tokens)
-              LootDrop params)
-```
-
-### Design Patterns
-
-| Pattern | Where Used | Justification |
-|---|---|---|
-| UUPS Proxy | AMM, Vault | Safe upgrade path without storage collision |
-| Factory (CREATE2) | ItemFactory | Deterministic item contract addresses |
-| Checks-Effects-Interactions | AMM, Vault, Crafting | Prevent reentrancy |
-| Pull-over-Push | LootDrop | VRF callback is pull-based (no push ETH) |
-| Access Control (Role-based) | All contracts | MINTER_ROLE, PAUSER_ROLE |
-| Pausable / Circuit Breaker | AMM, Vault | Emergency stop via Timelock |
-| Oracle adapter / interface | LootDrop, PriceFeed | Abstracts Chainlink behind interface |
-| Timelock | GameFiTimelock | 2-day mandatory delay on governance actions |
-| Reentrancy Guard | Vault, LootDrop | Defense-in-depth alongside CEI |
-| State Machine | LootDrop | REQUESTED → FULFILLED → CLAIMED |
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Smart Contracts | Solidity 0.8.24, Foundry |
-| Token Standards | ERC-20 (ERC20Votes+Permit), ERC-1155, ERC-4626 |
-| Oracle | Chainlink VRF v2.5, Chainlink Price Feeds |
-| Governance | OpenZeppelin Governor + TimelockController |
-| Indexing | The Graph (7 entities, 5 GraphQL queries) |
-| Frontend | React 18 + Vite + Wagmi v2 + RainbowKit |
-| L2 | Arbitrum Sepolia |
-| CI | GitHub Actions + Slither + forge coverage |
-
----
-
-## Governance Parameters
-
-| Parameter | Value |
-|---|---|
-| Voting Delay | 7 200 blocks ≈ 1 day (at 12 s/block) |
-| Voting Period | 50 400 blocks ≈ 1 week |
-| Quorum | 4% of total supply |
-| Proposal Threshold | 1% of total supply (10 000 GFI) |
-| Timelock Delay | 2 days |
-
----
-
-## Quick Start
+You need Foundry installed (`curl -L https://foundry.paradigm.xyz | bash`).
 
 ```bash
-# Prerequisites: Foundry, Node 20+
-curl -L https://foundry.paradigm.xyz | bash && foundryup
-
-git clone <repo> && cd blockchain2_final
-
-# Contracts
-forge install
-cp .env.example .env   # fill PRIVATE_KEY, BASE_SEPOLIA_RPC_URL, BASESCAN_API_KEY
-
-# Frontend
-cd frontend && npm install && npm run dev
-# → http://localhost:5173
+forge test -v
 ```
 
-### Run Tests
+All 16 tests should pass. The test suite covers:
+
+- Governor name, delay, period, quorum (unit)
+- Proposal threshold enforcement
+- Voting power after delegation
+- No admin backdoor on timelock
+- Full lifecycle: propose → vote → queue → execute
+- Quorum not met → Defeated
+- Double-vote reverts
+- Against votes defeat proposal
+- Fuzz: voting power matches delegated balance (1000 runs)
 
 ```bash
-forge test -v                                    # all tests
-forge test --match-path "test/governance/*" -v   # governance only
-forge coverage --report summary                  # coverage report
+forge coverage --report summary
 ```
 
-### Deploy
+---
+
+## Deploy (after Person 1 deploys their contracts)
+
+Copy `.env.example` to `.env` and fill in your values. Never commit `.env`.
 
 ```bash
-export GOV_TOKEN_ADDRESS=0x...   # from Person 1's deployment
-export PRIVATE_KEY=0x...
-
 forge script script/Deploy.s.sol:Deploy \
-  --rpc-url $BASE_SEPOLIA_RPC_URL \
-  --broadcast --verify \
-  --etherscan-api-key $BASESCAN_API_KEY -vvvv
+  --rpc-url $ARBITRUM_SEPOLIA_RPC_URL \
+  --broadcast \
+  --verify \
+  --etherscan-api-key $ARBISCAN_API_KEY \
+  -vvvv
 ```
 
-### Post-Deploy Verify
+Then verify the deployment came out right:
 
 ```bash
-export GOVERNOR_ADDRESS=0x...
-export TIMELOCK_ADDRESS=0x...
-
 forge script script/PostDeployVerify.s.sol:PostDeployVerify \
-  --rpc-url $BASE_SEPOLIA_RPC_URL -vvv
+  --rpc-url $ARBITRUM_SEPOLIA_RPC_URL -vvv
 ```
+
+You should see `=== ALL CHECKS PASSED ===`.
+
+After deploy, update the addresses in:
+- `frontend/src/config/contracts.js`
+- `subgraph/subgraph.yaml`
 
 ---
 
-## Gas Comparison: Mainnet vs Arbitrum Sepolia
+## Frontend
 
-| Operation | Est. Gas | L1 Cost (30 gwei) | L2 Cost (0.001 gwei) | Savings |
-|---|---|---|---|---|
-| AMM swap | 110 000 | ~$6.60 | ~$0.00011 | ~60 000x |
-| ERC-1155 mint | 60 000 | ~$3.60 | ~$0.00006 | ~60 000x |
-| Vault deposit | 85 000 | ~$5.10 | ~$0.000085 | ~60 000x |
-| Loot drop request | 95 000 | ~$5.70 | ~$0.000095 | ~60 000x |
-| Craft item | 70 000 | ~$4.20 | ~$0.000070 | ~60 000x |
-| Cast vote | 65 000 | ~$3.90 | ~$0.000065 | ~60 000x |
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173. Connect MetaMask on Arbitrum Sepolia. The app will prompt you to switch networks if you're on the wrong chain.
+
+Pages:
+- **Dashboard** — token balance, voting power, delegate, recent swaps from subgraph
+- **Items** — ERC-1155 balances, VRF loot drops, crafting
+- **Marketplace** — swap tokens, add liquidity, vault deposit
+- **Governance** — browse proposals, cast votes, see state + vote counts
 
 ---
 
 ## Subgraph
 
-The Graph URL: `https://api.studio.thegraph.com/query/YOUR_ID/gamefi-economy/version/latest`
+The subgraph indexes 5 contract event streams into 7 GraphQL entities: Swap, Proposal, Vote, TokenHolder, LootDrop, CraftingEvent, VaultDayData.
 
-Entities: `Swap`, `Proposal`, `Vote`, `TokenHolder`, `LootDrop`, `CraftingEvent`, `VaultDayData`
+Deploy to The Graph Studio after filling addresses in `subgraph/subgraph.yaml`:
 
 ```bash
 cd subgraph
-graph auth --studio <deploy-key>
+graph codegen && graph build
 graph deploy --studio gamefi-economy
 ```
 
 ---
 
-## Team
+## Network
 
-| Member | Area of Ownership |
-|---|---|
-| Person 1 | ERC-20/1155/4626 tokens · AMM · UUPS proxy · Factory · Chainlink adapters · Yul assembly · Tests |
-| Person 2 | Governor + Timelock · Subgraph · Frontend · Deployment scripts · CI · Documentation |
+Deployed on **Arbitrum Sepolia** (chainId 421614). We picked Arbitrum over Ethereum mainnet or Base Sepolia because:
+- we already had test ETH there
+- L2 fees are low enough that governance transactions are practical for actual users
+- Arbitrum has good Foundry + The Graph support
 
 ---
 
-## Documentation
+## CI
 
-- [Architecture Document](docs/architecture.md)
-- [Security Audit Report](docs/audit-report.md)
-- [Gas Optimization Report](docs/gas-report.md)
-- [Coverage Report](coverage/coverage-report.md)
+GitHub Actions runs on every push:
+- `forge fmt --check` — formatting
+- `forge build --sizes` — compilation
+- `forge test --profile ci` — tests with 5000 fuzz runs
+- `forge coverage` — coverage report uploaded as artifact
+- Slither — static analysis, fails on high-severity findings
+- Solhint — Solidity style linting
+- ESLint + Prettier — frontend code quality
+- `vite build` — production build check

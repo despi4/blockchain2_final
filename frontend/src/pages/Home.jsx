@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits, isAddress } from "viem";
-import {
-  ADDRESSES,
-  GOVERNANCE_TOKEN_ABI,
-  AMM_ABI,
-  VAULT_ABI,
-} from "../config/contracts";
+import { ADDRESSES, GOVERNANCE_TOKEN_ABI, AMM_ABI, VAULT_ABI } from "../config/contracts";
 import { fetchRecentSwaps } from "../config/subgraph";
 import { parseContractError } from "../hooks/useToast";
 
@@ -33,58 +28,64 @@ function shortAddr(addr) {
 
 export default function Home({ toast }) {
   const { address, isConnected } = useAccount();
-  const [delegatee, setDelegatee]   = useState("");
+  const [delegatee, setDelegatee] = useState("");
   const [recentSwaps, setRecentSwaps] = useState(null);
-  const [swapsError,  setSwapsError]  = useState(false);
+  const [swapsError, setSwapsError] = useState(false);
 
   // ── Contract reads ─────────────────────────────────────────────────────────
   const { data: tokenBalance } = useReadContract({
     address: ADDRESSES.GOVERNANCE_TOKEN,
-    abi:     GOVERNANCE_TOKEN_ABI,
+    abi: GOVERNANCE_TOKEN_ABI,
     functionName: "balanceOf",
-    args:    [address],
-    query:   { enabled: !!address },
+    args: [address],
+    query: { enabled: !!address },
   });
 
   const { data: votingPower } = useReadContract({
     address: ADDRESSES.GOVERNANCE_TOKEN,
-    abi:     GOVERNANCE_TOKEN_ABI,
+    abi: GOVERNANCE_TOKEN_ABI,
     functionName: "getVotes",
-    args:    [address],
-    query:   { enabled: !!address },
+    args: [address],
+    query: { enabled: !!address },
   });
 
   const { data: delegateAddr } = useReadContract({
     address: ADDRESSES.GOVERNANCE_TOKEN,
-    abi:     GOVERNANCE_TOKEN_ABI,
+    abi: GOVERNANCE_TOKEN_ABI,
     functionName: "delegates",
-    args:    [address],
-    query:   { enabled: !!address },
+    args: [address],
+    query: { enabled: !!address },
   });
 
   const { data: reserves } = useReadContract({
     address: ADDRESSES.AMM,
-    abi:     AMM_ABI,
+    abi: AMM_ABI,
     functionName: "getReserves",
   });
 
   const { data: vaultAssets } = useReadContract({
     address: ADDRESSES.VAULT,
-    abi:     VAULT_ABI,
+    abi: VAULT_ABI,
     functionName: "totalAssets",
   });
 
   const { data: vaultShares } = useReadContract({
     address: ADDRESSES.VAULT,
-    abi:     VAULT_ABI,
+    abi: VAULT_ABI,
     functionName: "balanceOf",
-    args:    [address],
-    query:   { enabled: !!address },
+    args: [address],
+    query: { enabled: !!address },
   });
 
   // ── Delegate write ─────────────────────────────────────────────────────────
-  const { writeContract, data: delegateTxHash, isPending: delegatePending, error: delegateError } = useWriteContract();
-  const { isLoading: delegateConfirming, isSuccess: delegateSuccess } = useWaitForTransactionReceipt({ hash: delegateTxHash });
+  const {
+    writeContract,
+    data: delegateTxHash,
+    isPending: delegatePending,
+    error: delegateError,
+  } = useWriteContract();
+  const { isLoading: delegateConfirming, isSuccess: delegateSuccess } =
+    useWaitForTransactionReceipt({ hash: delegateTxHash });
 
   useEffect(() => {
     if (delegateSuccess) toast?.success("Delegation confirmed!");
@@ -96,12 +97,15 @@ export default function Home({ toast }) {
 
   const handleDelegate = () => {
     const target = delegatee.trim() || address;
-    if (!isAddress(target)) { toast?.error("Invalid address"); return; }
+    if (!isAddress(target)) {
+      toast?.error("Invalid address");
+      return;
+    }
     writeContract({
       address: ADDRESSES.GOVERNANCE_TOKEN,
-      abi:     GOVERNANCE_TOKEN_ABI,
+      abi: GOVERNANCE_TOKEN_ABI,
       functionName: "delegate",
-      args:    [target],
+      args: [target],
     });
   };
 
@@ -109,13 +113,18 @@ export default function Home({ toast }) {
   useEffect(() => {
     fetchRecentSwaps(5)
       .then((d) => setRecentSwaps(d?.swaps ?? []))
-      .catch(() => { setSwapsError(true); setRecentSwaps([]); });
+      .catch(() => {
+        setSwapsError(true);
+        setRecentSwaps([]);
+      });
   }, []);
 
   return (
     <div className="page">
       <div className="flex-between section-gap">
-        <h1 className="page-title" style={{ margin: 0 }}>Dashboard</h1>
+        <h1 className="page-title" style={{ margin: 0 }}>
+          Dashboard
+        </h1>
       </div>
 
       {/* ── Token Stats ─────────────────────────────────────────────────── */}
@@ -143,15 +152,11 @@ export default function Home({ toast }) {
           <div>
             <div className="stat-row">
               <span className="label">Reserve 0</span>
-              <span className="value mono">
-                {reserves ? fmt(reserves[0]) : "—"}
-              </span>
+              <span className="value mono">{reserves ? fmt(reserves[0]) : "—"}</span>
             </div>
             <div className="stat-row">
               <span className="label">Reserve 1</span>
-              <span className="value mono">
-                {reserves ? fmt(reserves[1]) : "—"}
-              </span>
+              <span className="value mono">{reserves ? fmt(reserves[1]) : "—"}</span>
             </div>
           </div>
           <div>
@@ -187,7 +192,9 @@ export default function Home({ toast }) {
               onClick={handleDelegate}
             >
               {delegatePending || delegateConfirming ? (
-                <><span className="spinner" style={{ width: 14, height: 14 }} /> Delegating…</>
+                <>
+                  <span className="spinner" style={{ width: 14, height: 14 }} /> Delegating…
+                </>
               ) : (
                 "Delegate"
               )}
@@ -199,7 +206,9 @@ export default function Home({ toast }) {
       {/* ── Recent Swaps (from Subgraph) ─────────────────────────────── */}
       <div className="card">
         <div className="flex-between" style={{ marginBottom: "0.75rem" }}>
-          <div className="card-title" style={{ margin: 0 }}>Recent Swaps</div>
+          <div className="card-title" style={{ margin: 0 }}>
+            Recent Swaps
+          </div>
           <span className="text-sm text-muted">via The Graph</span>
         </div>
         {swapsError && (
@@ -226,10 +235,14 @@ export default function Home({ toast }) {
                 <tr key={s.id}>
                   <td className="mono">{shortAddr(s.sender)}</td>
                   <td className="mono">
-                    {s.amount0In !== "0" ? `${fmt(BigInt(s.amount0In))} T0` : `${fmt(BigInt(s.amount1In))} T1`}
+                    {s.amount0In !== "0"
+                      ? `${fmt(BigInt(s.amount0In))} T0`
+                      : `${fmt(BigInt(s.amount1In))} T1`}
                   </td>
                   <td className="mono">
-                    {s.amount0Out !== "0" ? `${fmt(BigInt(s.amount0Out))} T0` : `${fmt(BigInt(s.amount1Out))} T1`}
+                    {s.amount0Out !== "0"
+                      ? `${fmt(BigInt(s.amount0Out))} T0`
+                      : `${fmt(BigInt(s.amount1Out))} T1`}
                   </td>
                   <td className="text-muted text-sm">
                     {new Date(Number(s.timestamp) * 1000).toLocaleTimeString()}

@@ -6,8 +6,8 @@ export default function ToastContainer({ toasts }) {
         <div key={t.id} className={`toast ${t.type}`}>
           <span>
             {t.type === "success" && "✓ "}
-            {t.type === "error"   && "✕ "}
-            {t.type === "info"    && "ℹ "}
+            {t.type === "error" && "✕ "}
+            {t.type === "info" && "ℹ "}
           </span>
           <span>{t.message}</span>
         </div>

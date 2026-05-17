@@ -13,8 +13,8 @@ export function useToast() {
 
   const toast = {
     success: (msg) => push(msg, "success"),
-    error:   (msg) => push(msg, "error"),
-    info:    (msg) => push(msg, "info"),
+    error: (msg) => push(msg, "error"),
+    info: (msg) => push(msg, "info"),
   };
 
   return { toasts, toast };
@@ -22,12 +22,9 @@ export function useToast() {
 
 export function parseContractError(err) {
   if (!err) return "Unknown error";
-  if (err.code === 4001 || err.code === "ACTION_REJECTED")
-    return "Transaction rejected by user";
-  if (err.message?.includes("insufficient funds"))
-    return "Insufficient funds for gas";
-  if (err.message?.includes("user rejected"))
-    return "Transaction rejected by user";
+  if (err.code === 4001 || err.code === "ACTION_REJECTED") return "Transaction rejected by user";
+  if (err.message?.includes("insufficient funds")) return "Insufficient funds for gas";
+  if (err.message?.includes("user rejected")) return "Transaction rejected by user";
   const match = err.message?.match(/reason: (.+?)(?:\n|$)/);
   if (match) return match[1];
   return err.shortMessage || err.message || "Transaction failed";

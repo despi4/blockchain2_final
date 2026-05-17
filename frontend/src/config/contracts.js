@@ -1,24 +1,48 @@
 // ── Contract addresses (fill in after deployment) ──────────────────────────
 export const ADDRESSES = {
   GOVERNANCE_TOKEN: "0x0000000000000000000000000000000000000001",
-  AMM:              "0x0000000000000000000000000000000000000002",
-  VAULT:            "0x0000000000000000000000000000000000000003",
-  GOVERNOR:         "0x0000000000000000000000000000000000000004",
-  TIMELOCK:         "0x0000000000000000000000000000000000000005",
-  ITEM_NFT:         "0x0000000000000000000000000000000000000006",
-  LOOT:             "0x0000000000000000000000000000000000000007",
-  CRAFTING:         "0x0000000000000000000000000000000000000008",
+  AMM: "0x0000000000000000000000000000000000000002",
+  VAULT: "0x0000000000000000000000000000000000000003",
+  GOVERNOR: "0x0000000000000000000000000000000000000004",
+  TIMELOCK: "0x0000000000000000000000000000000000000005",
+  ITEM_NFT: "0x0000000000000000000000000000000000000006",
+  LOOT: "0x0000000000000000000000000000000000000007",
+  CRAFTING: "0x0000000000000000000000000000000000000008",
 };
 
 // ── ERC-1155 in-game items ────────────────────────────────────────────────────
 export const ITEM_IDS = {
-  1: { name: "Wood",          emoji: "🪵", type: "resource" },
-  2: { name: "Iron",          emoji: "⚙️",  type: "resource" },
-  3: { name: "Gold",          emoji: "🪙",  type: "resource" },
-  4: { name: "Magic Essence", emoji: "✨",  type: "resource" },
-  5: { name: "Iron Sword",    emoji: "⚔️",  type: "weapon",  recipe: [[2,3],[3,1]] },
-  6: { name: "Gold Shield",   emoji: "🛡️",  type: "armor",   recipe: [[3,5],[2,2]] },
-  7: { name: "Enchanted Staff",emoji:"🪄",  type: "weapon",  recipe: [[4,5],[1,3]] },
+  1: { name: "Wood", emoji: "🪵", type: "resource" },
+  2: { name: "Iron", emoji: "⚙️", type: "resource" },
+  3: { name: "Gold", emoji: "🪙", type: "resource" },
+  4: { name: "Magic Essence", emoji: "✨", type: "resource" },
+  5: {
+    name: "Iron Sword",
+    emoji: "⚔️",
+    type: "weapon",
+    recipe: [
+      [2, 3],
+      [3, 1],
+    ],
+  },
+  6: {
+    name: "Gold Shield",
+    emoji: "🛡️",
+    type: "armor",
+    recipe: [
+      [3, 5],
+      [2, 2],
+    ],
+  },
+  7: {
+    name: "Enchanted Staff",
+    emoji: "🪄",
+    type: "weapon",
+    recipe: [
+      [4, 5],
+      [1, 3],
+    ],
+  },
 };
 
 // ── Minimal ABIs (only functions used by the UI) ────────────────────────────
@@ -105,12 +129,12 @@ export const LOOT_ABI = [
 ];
 
 export const PROPOSAL_STATE_COLOR = {
-  Pending:   "#f59e0b",
-  Active:    "#3b82f6",
-  Canceled:  "#6b7280",
-  Defeated:  "#ef4444",
+  Pending: "#f59e0b",
+  Active: "#3b82f6",
+  Canceled: "#6b7280",
+  Defeated: "#ef4444",
   Succeeded: "#10b981",
-  Queued:    "#8b5cf6",
-  Expired:   "#6b7280",
-  Executed:  "#10b981",
+  Queued: "#8b5cf6",
+  Expired: "#6b7280",
+  Executed: "#10b981",
 };

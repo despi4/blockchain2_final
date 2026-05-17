@@ -30,13 +30,14 @@ jobs:
 
       - name: Run tests (fuzz + invariant)
         env:
-          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          ARBITRUM_SEPOLIA_RPC_URL: ${{ secrets.ARBITRUM_SEPOLIA_RPC_URL }}
         run: forge test --profile ci -v
 
       - name: Coverage report
         env:
-          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          ARBITRUM_SEPOLIA_RPC_URL: ${{ secrets.ARBITRUM_SEPOLIA_RPC_URL }}
         run: |
+          mkdir -p coverage
           forge coverage --report summary --report lcov
           forge coverage --report markdown > coverage/coverage-report.md
 
