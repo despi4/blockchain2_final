@@ -4,17 +4,17 @@ pragma solidity 0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {GameToken} from "../src/token/GameToken.sol";
+import {GoldToken} from "../src/token/GoldToken.sol";
 import {GuildTreasuryVaultV1} from "../src/vault/GuildTreasuryVaultV1.sol";
 import {GuildTreasuryVaultV2} from "../src/vault/GuildTreasuryVaultV2.sol";
 
 contract GuildTreasuryVaultV2Test is Test {
-    GameToken internal asset;
+    GoldToken internal asset;
     GuildTreasuryVaultV1 internal vaultV1;
     GuildTreasuryVaultV2 internal vaultV2;
 
     function setUp() external {
-        asset = new GameToken(address(this), 1_000_000 ether);
+        asset = new GoldToken(address(this), address(this), 1_000_000 ether);
 
         GuildTreasuryVaultV1 implementationV1 = new GuildTreasuryVaultV1();
         ERC1967Proxy proxy = new ERC1967Proxy(
