@@ -22,5 +22,14 @@
   "priceOracle": "0x80a01232F572960b5aB853162A8A09D12D79Ce40",
   "resourceAmm": "0x1f35Ec70fcF576ef585fF923F9479df54427fa98",
   "resourceLpToken": "0xDb255cD1d9eB1cBb1f0F2f242f2597f8B7F49997",
-  "woodToken": "0xf5Fe7C3c8820a459a16AfE810B92c147ab91457b"
+  "woodToken": "0xf5Fe7C3c8820a459a16AfE810B92c147ab91457b",
+  "startBlocks": {
+    "resourceAmm": 269200000,
+    "gameFiGovernor": 269200000,
+    "gameGovernanceToken": 269200000,
+    "lootDrop": 269200000,
+    "craftingSystem": 269200000,
+    "guildTreasuryVault": 269200000,
+    "itemRentalVault": 269200000
+  }
 }
