@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  useAccount,
-  useReadContract,
-  useReadContracts,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useAccount, useReadContract, useReadContracts, useWaitForTransactionReceipt } from "wagmi";
 import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
@@ -112,7 +107,10 @@ export default function Items({ toast }) {
   useTransactionToast(toast, craftSuccess, craftError, "Crafting confirmed.");
 
   useEffect(() => {
-    if (craftSuccess) { setCraftAmount("1"); refetchRecipes(); }
+    if (craftSuccess) {
+      setCraftAmount("1");
+      refetchRecipes();
+    }
   }, [craftSuccess, refetchRecipes]);
 
   const handleCraft = () => {

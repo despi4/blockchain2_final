@@ -1,7 +1,12 @@
 import { useEffect, useRef } from "react";
 import { parseContractError } from "./useToast";
 
-export function useTransactionToast(toast, isSuccess, error, successMessage = "Transaction confirmed.") {
+export function useTransactionToast(
+  toast,
+  isSuccess,
+  error,
+  successMessage = "Transaction confirmed."
+) {
   const toastRef = useRef(toast);
   toastRef.current = toast;
 

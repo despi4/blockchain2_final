@@ -153,7 +153,11 @@ export default function Marketplace({ toast }) {
   useTransactionToast(toast, isSuccess, error);
 
   useEffect(() => {
-    if (isSuccess) { refetchReserves(); refetchToken0Allowance(); refetchToken1Allowance(); }
+    if (isSuccess) {
+      refetchReserves();
+      refetchToken0Allowance();
+      refetchToken1Allowance();
+    }
   }, [isSuccess, refetchReserves, refetchToken0Allowance, refetchToken1Allowance]);
 
   const needsToken0Approval =
@@ -396,7 +400,9 @@ export default function Marketplace({ toast }) {
 
             <button
               className="btn-primary"
-              disabled={isPending || confirming || needsLiquidity0Approval || needsLiquidity1Approval}
+              disabled={
+                isPending || confirming || needsLiquidity0Approval || needsLiquidity1Approval
+              }
               onClick={handleAddLiquidity}
             >
               {isPending || confirming ? "Submitting..." : "Add Liquidity"}

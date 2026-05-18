@@ -183,8 +183,17 @@ export default function Governance({ toast }) {
     query: { enabled: configured.governor },
   });
 
-  const { writeContract: proposeWrite, data: proposeHash, isPending: proposePending, error: proposeError } = useWriteContract();
-  const { isLoading: proposeConfirming, isSuccess: proposeSuccess, data: proposeReceipt } = useWaitForTransactionReceipt({ hash: proposeHash });
+  const {
+    writeContract: proposeWrite,
+    data: proposeHash,
+    isPending: proposePending,
+    error: proposeError,
+  } = useWriteContract();
+  const {
+    isLoading: proposeConfirming,
+    isSuccess: proposeSuccess,
+    data: proposeReceipt,
+  } = useWaitForTransactionReceipt({ hash: proposeHash });
   useTransactionToast(toast, proposeSuccess, proposeError, "Proposal created.");
 
   useEffect(() => {
@@ -203,8 +212,14 @@ export default function Governance({ toast }) {
   }, [proposeSuccess, proposeReceipt]);
 
   const handlePropose = () => {
-    if (!proposeDesc.trim()) { toast?.error("Enter a description."); return; }
-    if (!address) { toast?.error("Connect wallet."); return; }
+    if (!proposeDesc.trim()) {
+      toast?.error("Enter a description.");
+      return;
+    }
+    if (!address) {
+      toast?.error("Connect wallet.");
+      return;
+    }
     const calldata = encodeFunctionData({
       abi: GOVERNANCE_TOKEN_ABI,
       functionName: "delegate",
@@ -270,7 +285,8 @@ export default function Governance({ toast }) {
         <div className="card section-gap">
           <div className="card-title">Create proposal</div>
           <p className="text-sm text-muted" style={{ marginBottom: "0.75rem" }}>
-            Creates a test proposal (action: re-delegate gGAME votes to self). Requires voting power ≥ proposal threshold.
+            Creates a test proposal (action: re-delegate gGAME votes to self). Requires voting power
+            ≥ proposal threshold.
           </p>
           <input
             value={proposeDesc}

@@ -116,7 +116,11 @@ export default function Vault({ toast }) {
   useTransactionToast(toast, isSuccess, error, "Vault transaction confirmed.");
 
   useEffect(() => {
-    if (isSuccess) { refetchAssets(); refetchShares(); refetchAllowance(); }
+    if (isSuccess) {
+      refetchAssets();
+      refetchShares();
+      refetchAllowance();
+    }
   }, [isSuccess, refetchAssets, refetchShares, refetchAllowance]);
 
   return (

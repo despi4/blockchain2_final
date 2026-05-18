@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  useAccount,
-  useReadContract,
-  useReadContracts,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useAccount, useReadContract, useReadContracts, useWaitForTransactionReceipt } from "wagmi";
 import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
@@ -131,7 +126,10 @@ export default function Rental({ toast }) {
   useTransactionToast(toast, isSuccess, error, "Rental transaction confirmed.");
 
   useEffect(() => {
-    if (isSuccess) { refetchGoldAllowance(); refetchItemApproval(); }
+    if (isSuccess) {
+      refetchGoldAllowance();
+      refetchItemApproval();
+    }
   }, [isSuccess, refetchGoldAllowance, refetchItemApproval]);
 
   return (

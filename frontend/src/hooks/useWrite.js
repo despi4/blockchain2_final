@@ -5,8 +5,8 @@ import { useWriteContract as useWagmiWrite } from "wagmi";
 // "max fee per gas less than block base fee" reverts. 0.05 gwei gives a safe
 // buffer without triggering MetaMask's "high fee" warning.
 const GAS = {
-  maxFeePerGas: 50_000_000n,         // 0.05 gwei
-  maxPriorityFeePerGas: 1_000_000n,  // 0.001 gwei
+  maxFeePerGas: 50_000_000n, // 0.05 gwei
+  maxPriorityFeePerGas: 1_000_000n, // 0.001 gwei
 };
 
 export function useWriteContract() {
