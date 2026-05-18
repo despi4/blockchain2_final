@@ -207,7 +207,7 @@ export default function Governance({ toast }) {
           toast?.success(`Proposal ID added to lookup: ${id.slice(0, 12)}…`);
           break;
         }
-      } catch (_) {
+      } catch {
         // log is not a ProposalCreated event — skip
       }
     }
