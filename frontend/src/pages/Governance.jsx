@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt } from "wagmi";
-import { encodeFunctionData } from "viem";
+import { decodeEventLog, encodeFunctionData } from "viem";
 import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
@@ -184,8 +184,23 @@ export default function Governance({ toast }) {
   });
 
   const { writeContract: proposeWrite, data: proposeHash, isPending: proposePending, error: proposeError } = useWriteContract();
-  const { isLoading: proposeConfirming, isSuccess: proposeSuccess } = useWaitForTransactionReceipt({ hash: proposeHash });
+  const { isLoading: proposeConfirming, isSuccess: proposeSuccess, data: proposeReceipt } = useWaitForTransactionReceipt({ hash: proposeHash });
   useTransactionToast(toast, proposeSuccess, proposeError, "Proposal created.");
+
+  useEffect(() => {
+    if (!proposeSuccess || !proposeReceipt) return;
+    for (const log of proposeReceipt.logs) {
+      try {
+        const decoded = decodeEventLog({ abi: GOVERNOR_ABI, data: log.data, topics: log.topics });
+        if (decoded.eventName === "ProposalCreated") {
+          const id = decoded.args.proposalId.toString();
+          setManualIds((prev) => (prev.includes(id) ? prev : [id, ...prev]));
+          toast?.success(`Proposal ID added to lookup: ${id.slice(0, 12)}…`);
+          break;
+        }
+      } catch {}
+    }
+  }, [proposeSuccess, proposeReceipt]);
 
   const handlePropose = () => {
     if (!proposeDesc.trim()) { toast?.error("Enter a description."); return; }
