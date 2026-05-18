@@ -3,9 +3,9 @@ import {
   useAccount,
   useReadContract,
   useReadContracts,
-  useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
+import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
   CRAFTING_ABI,
@@ -16,7 +16,7 @@ import {
   isConfiguredAddress,
 } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
-import { parseContractError } from "../hooks/useToast";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 
 function itemLabel(itemId) {
   const meta = ITEM_METADATA[itemId];
@@ -109,17 +109,11 @@ export default function Items({ toast }) {
     hash: craftHash,
   });
 
-  useEffect(() => {
-    if (craftSuccess) {
-      toast?.success("Crafting confirmed.");
-      setCraftAmount("1");
-      refetchRecipes();
-    }
-  }, [craftSuccess, refetchRecipes, toast]);
+  useTransactionToast(toast, craftSuccess, craftError, "Crafting confirmed.");
 
   useEffect(() => {
-    if (craftError) toast?.error(parseContractError(craftError));
-  }, [craftError, toast]);
+    if (craftSuccess) { setCraftAmount("1"); refetchRecipes(); }
+  }, [craftSuccess, refetchRecipes]);
 
   const handleCraft = () => {
     if (!selectedRecipe) {

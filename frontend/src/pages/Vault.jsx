@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract } from "../hooks/useWrite";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 import { ADDRESSES, ERC20_ABI, VAULT_ABI, isConfiguredAddress } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
-import { parseContractError } from "../hooks/useToast";
 import { formatToken, parseTokenInput, shortAddress } from "../utils/format";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
@@ -37,7 +38,7 @@ export default function Vault({ toast }) {
     query: { enabled: !!address && isConfiguredAddress(assetAddress) },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: assetAddress,
     abi: ERC20_ABI,
     functionName: "allowance",
@@ -112,17 +113,11 @@ export default function Vault({ toast }) {
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
-  useEffect(() => {
-    if (isSuccess) {
-      toast?.success("Vault transaction confirmed.");
-      refetchAssets();
-      refetchShares();
-    }
-  }, [isSuccess, refetchAssets, refetchShares, toast]);
+  useTransactionToast(toast, isSuccess, error, "Vault transaction confirmed.");
 
   useEffect(() => {
-    if (error) toast?.error(parseContractError(error));
-  }, [error, toast]);
+    if (isSuccess) { refetchAssets(); refetchShares(); refetchAllowance(); }
+  }, [isSuccess, refetchAssets, refetchShares, refetchAllowance]);
 
   return (
     <div className="page">
@@ -217,7 +212,7 @@ export default function Vault({ toast }) {
             )}
             <button
               className="btn-primary"
-              disabled={isPending || confirming}
+              disabled={isPending || confirming || needsApproval}
               onClick={() =>
                 writeContract({
                   address: ADDRESSES.VAULT,

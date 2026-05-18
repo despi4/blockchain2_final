@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
   AMM_ABI,
@@ -11,7 +12,7 @@ import {
 } from "../config/contracts";
 import { fetchRecentSwaps } from "../config/subgraph";
 import ConfigNotice from "../components/ConfigNotice";
-import { parseContractError } from "../hooks/useToast";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 import { formatToken, shortAddress, timestampToLocal } from "../utils/format";
 
 function StatCard({ label, value, sub }) {
@@ -118,13 +119,7 @@ export default function Home({ toast }) {
       hash: delegateHash,
     });
 
-  useEffect(() => {
-    if (delegateSuccess) toast?.success("Delegation confirmed.");
-  }, [delegateSuccess, toast]);
-
-  useEffect(() => {
-    if (delegateError) toast?.error(parseContractError(delegateError));
-  }, [delegateError, toast]);
+  useTransactionToast(toast, delegateSuccess, delegateError, "Delegation confirmed.");
 
   useEffect(() => {
     fetchRecentSwaps(5)

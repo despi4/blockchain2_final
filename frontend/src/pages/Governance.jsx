@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { encodeFunctionData } from "viem";
+import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
   GOVERNANCE_TOKEN_ABI,
@@ -10,7 +12,7 @@ import {
 } from "../config/contracts";
 import { fetchProposals } from "../config/subgraph";
 import ConfigNotice from "../components/ConfigNotice";
-import { parseContractError } from "../hooks/useToast";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 import { formatToken } from "../utils/format";
 
 function StateBadge({ state }) {
@@ -70,13 +72,7 @@ function ProposalCard({ proposalId, address, toast }) {
   const { writeContract, data: voteHash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: voteHash });
 
-  useEffect(() => {
-    if (isSuccess) toast?.success("Vote submitted.");
-  }, [isSuccess, toast]);
-
-  useEffect(() => {
-    if (error) toast?.error(parseContractError(error));
-  }, [error, toast]);
+  useTransactionToast(toast, isSuccess, error, "Vote submitted.");
 
   const handleVote = () => {
     writeContract({
@@ -144,6 +140,7 @@ export default function Governance({ toast }) {
   const [subgraphError, setSubgraphError] = useState(false);
   const [manualProposalId, setManualProposalId] = useState("");
   const [manualIds, setManualIds] = useState([]);
+  const [proposeDesc, setProposeDesc] = useState("");
 
   const configured = {
     governor: isConfiguredAddress(ADDRESSES.GOVERNOR),
@@ -185,6 +182,26 @@ export default function Governance({ toast }) {
     functionName: "quorumNumerator",
     query: { enabled: configured.governor },
   });
+
+  const { writeContract: proposeWrite, data: proposeHash, isPending: proposePending, error: proposeError } = useWriteContract();
+  const { isLoading: proposeConfirming, isSuccess: proposeSuccess } = useWaitForTransactionReceipt({ hash: proposeHash });
+  useTransactionToast(toast, proposeSuccess, proposeError, "Proposal created.");
+
+  const handlePropose = () => {
+    if (!proposeDesc.trim()) { toast?.error("Enter a description."); return; }
+    if (!address) { toast?.error("Connect wallet."); return; }
+    const calldata = encodeFunctionData({
+      abi: GOVERNANCE_TOKEN_ABI,
+      functionName: "delegate",
+      args: [address],
+    });
+    proposeWrite({
+      address: ADDRESSES.GOVERNOR,
+      abi: GOVERNOR_ABI,
+      functionName: "propose",
+      args: [[ADDRESSES.GOVERNANCE_TOKEN], [0n], [calldata], proposeDesc],
+    });
+  };
 
   useEffect(() => {
     fetchProposals(10)
@@ -233,6 +250,28 @@ export default function Governance({ toast }) {
           </div>
         </div>
       </div>
+
+      {address && configured.governor && (
+        <div className="card section-gap">
+          <div className="card-title">Create proposal</div>
+          <p className="text-sm text-muted" style={{ marginBottom: "0.75rem" }}>
+            Creates a test proposal (action: re-delegate gGAME votes to self). Requires voting power ≥ proposal threshold.
+          </p>
+          <input
+            value={proposeDesc}
+            onChange={(event) => setProposeDesc(event.target.value)}
+            placeholder="Proposal description"
+            style={{ width: "100%", marginBottom: "0.75rem" }}
+          />
+          <button
+            className="btn-primary"
+            disabled={proposePending || proposeConfirming}
+            onClick={handlePropose}
+          >
+            {proposePending || proposeConfirming ? "Submitting..." : "Create proposal"}
+          </button>
+        </div>
+      )}
 
       <div className="section-gap">
         <div className="flex-between" style={{ marginBottom: "0.75rem" }}>

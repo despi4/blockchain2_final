@@ -3,9 +3,9 @@ import {
   useAccount,
   useReadContract,
   useReadContracts,
-  useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
+import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
   ERC20_ABI,
@@ -16,7 +16,7 @@ import {
   isConfiguredAddress,
 } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
-import { parseContractError } from "../hooks/useToast";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 import {
   basisPointsToPercent,
   formatToken,
@@ -50,7 +50,7 @@ export default function Rental({ toast }) {
     gold: isConfiguredAddress(ADDRESSES.GOLD_TOKEN),
   };
 
-  const { data: itemApproval } = useReadContract({
+  const { data: itemApproval, refetch: refetchItemApproval } = useReadContract({
     address: ADDRESSES.GAME_ITEMS,
     abi: GAME_ITEMS_ABI,
     functionName: "isApprovedForAll",
@@ -58,7 +58,7 @@ export default function Rental({ toast }) {
     query: { enabled: !!address && configured.items && configured.rental },
   });
 
-  const { data: goldAllowance } = useReadContract({
+  const { data: goldAllowance, refetch: refetchGoldAllowance } = useReadContract({
     address: ADDRESSES.GOLD_TOKEN,
     abi: ERC20_ABI,
     functionName: "allowance",
@@ -128,13 +128,11 @@ export default function Rental({ toast }) {
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
-  useEffect(() => {
-    if (isSuccess) toast?.success("Rental transaction confirmed.");
-  }, [isSuccess, toast]);
+  useTransactionToast(toast, isSuccess, error, "Rental transaction confirmed.");
 
   useEffect(() => {
-    if (error) toast?.error(parseContractError(error));
-  }, [error, toast]);
+    if (isSuccess) { refetchGoldAllowance(); refetchItemApproval(); }
+  }, [isSuccess, refetchGoldAllowance, refetchItemApproval]);
 
   return (
     <div className="page">
@@ -313,7 +311,7 @@ export default function Rental({ toast }) {
             )}
             <button
               className="btn-primary"
-              disabled={isPending || confirming}
+              disabled={isPending || confirming || needsGoldApproval}
               onClick={() =>
                 writeContract({
                   address: ADDRESSES.RENTAL_VAULT,

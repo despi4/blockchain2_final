@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract } from "../hooks/useWrite";
 import {
   ADDRESSES,
   ERC20_ABI,
@@ -9,7 +10,7 @@ import {
 } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
 import { fetchRecentLootDrops } from "../config/subgraph";
-import { parseContractError } from "../hooks/useToast";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 import { basisPointsToPercent, formatToken, shortAddress, timestampToLocal } from "../utils/format";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
@@ -32,7 +33,7 @@ export default function Loot({ toast }) {
     query: { enabled: !!address && configured.gold },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: ADDRESSES.GOLD_TOKEN,
     abi: ERC20_ABI,
     functionName: "allowance",
@@ -57,13 +58,11 @@ export default function Loot({ toast }) {
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
-  useEffect(() => {
-    if (isSuccess) toast?.success("Loot request submitted.");
-  }, [isSuccess, toast]);
+  useTransactionToast(toast, isSuccess, error, "Loot request submitted.");
 
   useEffect(() => {
-    if (error) toast?.error(parseContractError(error));
-  }, [error, toast]);
+    if (isSuccess) refetchAllowance();
+  }, [isSuccess, refetchAllowance]);
 
   useEffect(() => {
     fetchRecentLootDrops(10)
@@ -150,7 +149,7 @@ export default function Loot({ toast }) {
             )}
             <button
               className="btn-primary"
-              disabled={isPending || confirming}
+              disabled={isPending || confirming || needsApproval}
               onClick={() =>
                 writeContract({
                   address: ADDRESSES.LOOT,

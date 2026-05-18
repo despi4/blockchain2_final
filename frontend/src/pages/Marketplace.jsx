@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract } from "../hooks/useWrite";
+import { useTransactionToast } from "../hooks/useTransactionToast";
 import {
   ADDRESSES,
   AMM_ABI,
@@ -8,7 +10,6 @@ import {
   isConfiguredAddress,
 } from "../config/contracts";
 import ConfigNotice from "../components/ConfigNotice";
-import { parseContractError } from "../hooks/useToast";
 import { formatToken, parseTokenInput, shortAddress } from "../utils/format";
 
 const MAX_UINT256 = 2n ** 256n - 1n;
@@ -92,7 +93,7 @@ export default function Marketplace({ toast }) {
     query: { enabled: !!address && isConfiguredAddress(token1Address) },
   });
 
-  const { data: token0Allowance } = useReadContract({
+  const { data: token0Allowance, refetch: refetchToken0Allowance } = useReadContract({
     address: token0Address,
     abi: ERC20_ABI,
     functionName: "allowance",
@@ -100,7 +101,7 @@ export default function Marketplace({ toast }) {
     query: { enabled: !!address && isConfiguredAddress(token0Address) && configured },
   });
 
-  const { data: token1Allowance } = useReadContract({
+  const { data: token1Allowance, refetch: refetchToken1Allowance } = useReadContract({
     address: token1Address,
     abi: ERC20_ABI,
     functionName: "allowance",
@@ -149,16 +150,11 @@ export default function Marketplace({ toast }) {
 
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
-  useEffect(() => {
-    if (isSuccess) {
-      toast?.success("Transaction confirmed.");
-      refetchReserves();
-    }
-  }, [isSuccess, refetchReserves, toast]);
+  useTransactionToast(toast, isSuccess, error);
 
   useEffect(() => {
-    if (error) toast?.error(parseContractError(error));
-  }, [error, toast]);
+    if (isSuccess) { refetchReserves(); refetchToken0Allowance(); refetchToken1Allowance(); }
+  }, [isSuccess, refetchReserves, refetchToken0Allowance, refetchToken1Allowance]);
 
   const needsToken0Approval =
     swapAmountWei > 0n && swapDirection === "0to1" && (token0Allowance || 0n) < swapAmountWei;
@@ -344,7 +340,11 @@ export default function Marketplace({ toast }) {
               </button>
             )}
 
-            <button className="btn-primary" disabled={isPending || confirming} onClick={handleSwap}>
+            <button
+              className="btn-primary"
+              disabled={isPending || confirming || needsToken0Approval || needsToken1Approval}
+              onClick={handleSwap}
+            >
               {isPending || confirming ? "Submitting..." : "Swap"}
             </button>
           </>
@@ -396,7 +396,7 @@ export default function Marketplace({ toast }) {
 
             <button
               className="btn-primary"
-              disabled={isPending || confirming}
+              disabled={isPending || confirming || needsLiquidity0Approval || needsLiquidity1Approval}
               onClick={handleAddLiquidity}
             >
               {isPending || confirming ? "Submitting..." : "Add Liquidity"}

@@ -1,3 +1,5 @@
+import { parseAbi } from "viem";
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 function envAddress(name, fallback = ZERO_ADDRESS) {
@@ -40,22 +42,26 @@ export const ITEM_METADATA = {
 export const ITEM_IDS = Object.keys(ITEM_METADATA).map(Number);
 export const DEFAULT_RECIPE_IDS = [1, 2, 3, 4, 5];
 
-export const ERC20_ABI = [
+export const ERC20_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
   "function decimals() view returns (uint8)",
   "function symbol() view returns (string)",
-];
+]);
 
-export const GOVERNANCE_TOKEN_ABI = [
-  ...ERC20_ABI,
+export const GOVERNANCE_TOKEN_ABI = parseAbi([
+  "function balanceOf(address) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
   "function getVotes(address) view returns (uint256)",
   "function delegates(address) view returns (address)",
   "function delegate(address delegatee)",
-];
+]);
 
-export const AMM_ABI = [
+export const AMM_ABI = parseAbi([
   "function token0() view returns (address)",
   "function token1() view returns (address)",
   "function lpToken() view returns (address)",
@@ -66,11 +72,18 @@ export const AMM_ABI = [
   "function swapExactToken0ForToken1(uint256 amountIn, uint256 minAmountOut, address to) returns (uint256 amountOut)",
   "function swapExactToken1ForToken0(uint256 amountIn, uint256 minAmountOut, address to) returns (uint256 amountOut)",
   "event Swap(address indexed sender, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, address to)",
-];
+]);
 
-export const LP_TOKEN_ABI = [...ERC20_ABI, "function totalSupply() view returns (uint256)"];
+export const LP_TOKEN_ABI = parseAbi([
+  "function balanceOf(address) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+  "function totalSupply() view returns (uint256)",
+]);
 
-export const VAULT_ABI = [
+export const VAULT_ABI = parseAbi([
   "function asset() view returns (address)",
   "function totalAssets() view returns (uint256)",
   "function totalSupply() view returns (uint256)",
@@ -85,28 +98,28 @@ export const VAULT_ABI = [
   "function withdraw(uint256 assets, address receiver, address owner) returns (uint256 shares)",
   "function redeem(uint256 shares, address receiver, address owner) returns (uint256 assets)",
   "function accruedFees() view returns (uint256)",
-];
+]);
 
-export const GAME_ITEMS_ABI = [
+export const GAME_ITEMS_ABI = parseAbi([
   "function balanceOf(address account, uint256 id) view returns (uint256)",
   "function balanceOfBatch(address[] accounts, uint256[] ids) view returns (uint256[])",
   "function isApprovedForAll(address account, address operator) view returns (bool)",
   "function setApprovalForAll(address operator, bool approved)",
   "function uri(uint256 id) view returns (string)",
-];
+]);
 
-export const CRAFTING_ABI = [
+export const CRAFTING_ABI = parseAbi([
   "function craft(uint256 recipeId, uint256 amount)",
   "function getRecipe(uint256 recipeId) view returns (uint256[] inputItemIds, uint256[] inputAmounts, uint256 outputItemId, uint256 outputAmount, bool active)",
-];
+]);
 
-export const LOOT_ABI = [
+export const LOOT_ABI = parseAbi([
   "function lootFee() view returns (uint256)",
   "function getDropRates() view returns (uint256[] itemIds, uint16[] dropRatesBps)",
   "function requestLootDrop() returns (uint256 requestId)",
-];
+]);
 
-export const RENTAL_VAULT_ABI = [
+export const RENTAL_VAULT_ABI = parseAbi([
   "function nextListingId() view returns (uint256)",
   "function nextRentalId() view returns (uint256)",
   "function protocolFeeBps() view returns (uint256)",
@@ -119,9 +132,9 @@ export const RENTAL_VAULT_ABI = [
   "function endRental(uint256 rentalId)",
   "function cancelListing(uint256 listingId)",
   "function claimEarnings()",
-];
+]);
 
-export const GOVERNOR_ABI = [
+export const GOVERNOR_ABI = parseAbi([
   "function votingDelay() view returns (uint256)",
   "function votingPeriod() view returns (uint256)",
   "function proposalThreshold() view returns (uint256)",
@@ -132,7 +145,7 @@ export const GOVERNOR_ABI = [
   "function hasVoted(uint256 proposalId, address account) view returns (bool)",
   "function castVote(uint256 proposalId, uint8 support) returns (uint256)",
   "function propose(address[] targets, uint256[] values, bytes[] calldatas, string description) returns (uint256)",
-];
+]);
 
 export const PROPOSAL_STATE = {
   0: "Pending",
