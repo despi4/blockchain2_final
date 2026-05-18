@@ -92,8 +92,9 @@ contract Deploy is Script {
     }
 
     function run() external {
-        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerKey);
+        // Use msg.sender (set by --private-key CLI flag) so Foundry reads the
+        // real on-chain nonce from the fork instead of starting from 0.
+        address deployer = msg.sender;
 
         console2.log("=== GameFi Economy - Arbitrum Sepolia ===");
         console2.log("Deployer:", deployer);
@@ -101,7 +102,7 @@ contract Deploy is Script {
 
         Deployed memory d;
 
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast();
 
         // ── 1. Governance token ───────────────────────────────────────────────
         d.govToken = address(new GameGovernanceToken(deployer, deployer, GOV_SUPPLY));

@@ -16,6 +16,26 @@ The protocol models a small onchain game economy around:
 - Chainlink-style price oracles
 - DAO-controlled configuration and upgrades
 
+## Arbitrum Sepolia Deployment
+
+| Contract | Address | Explorer |
+|---|---|---|
+| GameGovernanceToken | 0x8c0af3d55Be9B86C3c74B3c706Fc38409A703D20 | [view](https://sepolia.arbiscan.io/address/0x8c0af3d55Be9B86C3c74B3c706Fc38409A703D20) |
+| GoldToken | 0xE3De34EBB28493b5D8F59ba7BB07e21a25f8AdAb | [view](https://sepolia.arbiscan.io/address/0xE3De34EBB28493b5D8F59ba7BB07e21a25f8AdAb) |
+| IronToken | 0x5A63d721CE3b0dcAAF230c685A4A992666D528e9 | [view](https://sepolia.arbiscan.io/address/0x5A63d721CE3b0dcAAF230c685A4A992666D528e9) |
+| WoodToken | 0xf5Fe7C3c8820a459a16AfE810B92c147ab91457b | [view](https://sepolia.arbiscan.io/address/0xf5Fe7C3c8820a459a16AfE810B92c147ab91457b) |
+| GameItems (ERC1155) | 0xf16454c6f28694a291bEADb0658Df1A95419B712 | [view](https://sepolia.arbiscan.io/address/0xf16454c6f28694a291bEADb0658Df1A95419B712) |
+| CraftingSystem | 0x393825Ac24DAcF19616b46F7C5eafa415BEB5424 | [view](https://sepolia.arbiscan.io/address/0x393825Ac24DAcF19616b46F7C5eafa415BEB5424) |
+| ResourceAMM (GOLD/IRON) | 0x1f35Ec70fcF576ef585fF923F9479df54427fa98 | [view](https://sepolia.arbiscan.io/address/0x1f35Ec70fcF576ef585fF923F9479df54427fa98) |
+| GuildTreasuryVault (proxy) | 0xbb2db02389cB4C90956FCb9018f04fe96d51D502 | [view](https://sepolia.arbiscan.io/address/0xbb2db02389cB4C90956FCb9018f04fe96d51D502) |
+| ItemRentalVault | 0x1e7CBF8C16654AdA9D74b83F1c0E9c25310142dc | [view](https://sepolia.arbiscan.io/address/0x1e7CBF8C16654AdA9D74b83F1c0E9c25310142dc) |
+| LootDrop | 0x586d17959de7585A9eD06C34288f2C1Eb7854093 | [view](https://sepolia.arbiscan.io/address/0x586d17959de7585A9eD06C34288f2C1Eb7854093) |
+| PriceOracle | 0x80a01232F572960b5aB853162A8A09D12D79Ce40 | [view](https://sepolia.arbiscan.io/address/0x80a01232F572960b5aB853162A8A09D12D79Ce40) |
+| GameConfig (proxy) | 0xb07Ff42844Fd8372465ED91Fa47E3317410Fc0F2 | [view](https://sepolia.arbiscan.io/address/0xb07Ff42844Fd8372465ED91Fa47E3317410Fc0F2) |
+| GameFactory | 0x5AE532c9C4c37Adc1d6fCAC61A5761A3c6AbC96B | [view](https://sepolia.arbiscan.io/address/0x5AE532c9C4c37Adc1d6fCAC61A5761A3c6AbC96B) |
+| GameFiGovernor | 0xEd011c6397B2BEB7f2cc43892C492604165bBAdB | [view](https://sepolia.arbiscan.io/address/0xEd011c6397B2BEB7f2cc43892C492604165bBAdB) |
+| GameFiTimelock | 0x73D39aD3D837b68e31c6a800b5732e3FBCe5b7bC | [view](https://sepolia.arbiscan.io/address/0x73D39aD3D837b68e31c6a800b5732e3FBCe5b7bC) |
+
 The canonical target network for the repo is `Arbitrum Sepolia`.
 
 ## Highlights

@@ -7,7 +7,7 @@ dataSources:
     name: ResourceAMM
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x1f35Ec70fcF576ef585fF923F9479df54427fa98"
       abi: ResourceAMM
       startBlock: 0
     mapping:
@@ -28,7 +28,7 @@ dataSources:
     name: GameFiGovernor
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0xEd011c6397B2BEB7f2cc43892C492604165bBAdB"
       abi: GameFiGovernor
       startBlock: 0
     mapping:
@@ -58,7 +58,7 @@ dataSources:
     name: GameGovernanceToken
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x8c0af3d55Be9B86C3c74B3c706Fc38409A703D20"
       abi: GameGovernanceToken
       startBlock: 0
     mapping:
@@ -83,7 +83,7 @@ dataSources:
     name: LootDrop
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x586d17959de7585A9eD06C34288f2C1Eb7854093"
       abi: LootDrop
       startBlock: 0
     mapping:
@@ -106,7 +106,7 @@ dataSources:
     name: CraftingSystem
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x393825Ac24DAcF19616b46F7C5eafa415BEB5424"
       abi: CraftingSystem
       startBlock: 0
     mapping:
@@ -127,7 +127,7 @@ dataSources:
     name: GuildTreasuryVault
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0xbb2db02389cB4C90956FCb9018f04fe96d51D502"
       abi: GuildTreasuryVaultV1
       startBlock: 0
     mapping:
@@ -150,7 +150,7 @@ dataSources:
     name: ItemRentalVault
     network: arbitrum-sepolia
     source:
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x1e7CBF8C16654AdA9D74b83F1c0E9c25310142dc"
       abi: ItemRentalVault
       startBlock: 0
     mapping:

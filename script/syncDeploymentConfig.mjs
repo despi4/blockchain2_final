@@ -18,7 +18,10 @@ if (!fs.existsSync(manifestPath)) {
 }
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-const { addresses = {}, startBlocks = {}, frontend = {} } = manifest;
+// Support both flat { "resourceAmm": "0x..." } and nested { addresses: { ... } } layouts
+const addresses = manifest.addresses ?? manifest;
+const startBlocks = manifest.startBlocks ?? {};
+const frontend = manifest.frontend ?? {};
 
 const requiredKeys = [
   "resourceAmm",
@@ -30,7 +33,7 @@ const requiredKeys = [
   "craftingSystem",
   "guildTreasuryVault",
   "itemRentalVault",
-  "timelock",
+  "gameFiTimelock",
 ];
 
 for (const key of requiredKeys) {
@@ -47,7 +50,7 @@ const frontendEnv = [
   `VITE_AMM_ADDRESS=${addresses.resourceAmm}`,
   `VITE_VAULT_ADDRESS=${addresses.guildTreasuryVault}`,
   `VITE_GOVERNOR_ADDRESS=${addresses.gameFiGovernor}`,
-  `VITE_TIMELOCK_ADDRESS=${addresses.timelock}`,
+  `VITE_TIMELOCK_ADDRESS=${addresses.gameFiTimelock}`,
   `VITE_GAME_ITEMS_ADDRESS=${addresses.gameItems}`,
   `VITE_LOOT_ADDRESS=${addresses.lootDrop}`,
   `VITE_CRAFTING_ADDRESS=${addresses.craftingSystem}`,
